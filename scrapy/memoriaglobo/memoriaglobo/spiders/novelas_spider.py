@@ -43,8 +43,23 @@ class NovelasSpider(scrapy.Spider):
             ficha_tecnica = extract_all_with_css("article > div:nth-child(4) > div:nth-child(2) > div > div > p::text")
         if not ficha_tecnica:
             ficha_tecnica = extract_all_with_css("article > div:nth-child(5) > div > p::text")
+        
+        elenco = []
+
+        for ficha in ficha_tecnica:
+            if " – " in ficha:
+                arr = ficha.split(" – ")
+                elenco.append({"ator": arr[0].strip(), "personagem": arr[1].strip()})
+                continue
+            if "(" in ficha:
+                arr = ficha.split("(")
+                elenco.append({"ator": arr[0].strip(), "personagem": arr[1].strip()})
+                continue
+
+            elenco.append({"ator": ficha.strip()})
+
 
         yield {
             "novela": novela,
-            "ficha_tecnica": ficha_tecnica
+            "elenco": elenco
         }
