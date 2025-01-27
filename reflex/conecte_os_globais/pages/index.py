@@ -7,28 +7,29 @@ from collections import defaultdict
 from ..template import template
 from ..state import BaseState
 from ..components.reactflow import react_flow, background, controls
+from ..src.service import GlobalService, NodeService
 
 initial_nodes = [
     {
-        'id': 'left#1',
+        'id': 'left#0',
         'data': {'label': 'Left'},
         'position': {'x': 0, 'y': 0},
     },
     {
-        'id': 'right#1',
+        'id': 'right#0',
         'data': {'label': 'Right'},
         'position': {'x': 0, 'y': 100},
     },
 ]
 
 initial_edges = [
-    {'id': 'left#1-right#1', 'source': 'left#1', 'target': 'right#1',},
+    {'id': 'left#0-right#0', 'source': 'left#0', 'target': 'right#0',},
 ]
 
 class IndexState(BaseState):
     
-    nodes: List[Dict[str, Any]] = initial_nodes
-    edges: List[Dict[str, Any]] = initial_edges
+    nodes: List[Dict[str, Any]] = []
+    edges: List[Dict[str, Any]] = []
 
     @rx.event
     def add_random_node(self):
@@ -47,6 +48,25 @@ class IndexState(BaseState):
             "draggable": True,
         }
         self.nodes.append(new_node)
+    
+    @rx.event
+    def sort_global(self):
+        self.clear_graph()
+        global_service = GlobalService()
+        node_service = NodeService()
+
+        global_left = global_service.get_random_global()
+        global_right = global_service.get_random_global()
+        node_left = node_service.new_node(id=global_left.pk, label=global_left.ator)
+        node_right = node_service.new_node(id=global_right.pk, label=global_right.ator, x=200)
+        self.nodes.append(node_left)
+        self.nodes.append(node_right)
+
+    
+    @rx.event
+    def start_game(self):
+        self.nodes = []  # Clear the nodes list
+        self.edges = []  # Clear the edges list
 
     @rx.event
     def clear_graph(self):
@@ -58,10 +78,7 @@ class IndexState(BaseState):
         # Iterate over the existing edges
         for i, edge in enumerate(self.edges):
             # If we find an edge with the same ID as the new edge
-            if (
-                edge["id"]
-                == f"e{new_edge['source']}-{new_edge['target']}"
-            ):
+            if (edge["id"] == f"e{new_edge['source']}-{new_edge['target']}"):
                 # Delete the existing edge
                 del self.edges[i]
                 break
@@ -72,9 +89,6 @@ class IndexState(BaseState):
                 "id": f"e{new_edge['source']}-{new_edge['target']}",
                 "source": new_edge["source"],
                 "target": new_edge["target"],
-                "label": random.choice(
-                    ["+", "-", "*", "/"]
-                ),
                 "animated": True,
             }
         )
@@ -130,12 +144,12 @@ def index_page() -> rx.Component:
             ),
             rx.hstack(
                 rx.button(
-                    "Clear graph",
-                    on_click=IndexState.clear_graph,
+                    "Sortear os Globais",
+                    on_click=IndexState.sort_global,
                 ),
                 rx.button(
-                    "Add node",
-                    on_click=IndexState.add_random_node,
+                    "Iniciar",
+                    on_click=IndexState.clear_graph,
                 ),
             ),
             height="90vh",
