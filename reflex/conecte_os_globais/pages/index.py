@@ -30,6 +30,11 @@ class IndexState(BaseState):
     
     nodes: List[Dict[str, Any]] = []
     edges: List[Dict[str, Any]] = []
+    ator_name_left: str = ""
+    ator_name_right: str = ""
+    novela_name_left: str = ""
+    novela_name_right: str = ""
+    search_value: str = ""
 
     @rx.event
     def add_random_node(self):
@@ -59,19 +64,31 @@ class IndexState(BaseState):
         global_right = global_service.get_random_global()
         node_left = node_service.new_node(id=global_left.pk, label=global_left.ator)
         node_right = node_service.new_node(id=global_right.pk, label=global_right.ator, x=200)
+        
         self.nodes.append(node_left)
         self.nodes.append(node_right)
+        self.ator_name_left = global_left.ator
+        self.ator_name_right = global_right.ator
 
     
     @rx.event
     def start_game(self):
-        self.nodes = []  # Clear the nodes list
-        self.edges = []  # Clear the edges list
+        global_service = GlobalService()
+        novelas = []
+        novelas += global_service.get_all_novelas(self.ator_name_left)
+        novelas += global_service.get_all_novelas(self.ator_name_right)
+        print(novelas)
 
     @rx.event
     def clear_graph(self):
         self.nodes = []  # Clear the nodes list
         self.edges = []  # Clear the edges list
+
+    @rx.event
+    def find_search_value(self, value: str):
+        self.search_value = value
+        
+
 
     @rx.event
     def on_connect(self, new_edge):
@@ -149,8 +166,26 @@ def index_page() -> rx.Component:
                 ),
                 rx.button(
                     "Iniciar",
+                    on_click=IndexState.start_game,
+                ),
+                rx.button(
+                    "Reiniciar",
                     on_click=IndexState.clear_graph,
                 ),
+            ),
+            rx.input(
+                rx.input.slot(rx.icon("search")),
+                rx.input.slot(
+                    rx.icon("x"),
+                    justify="end",
+                    cursor="pointer",
+                    on_click=IndexState.setvar("search_value", ""),
+                    display=rx.cond(IndexState.search_value, "flex", "none"),
+                ),
+                value=IndexState.search_value,
+                placeholder="Pesquise aqui...",
+                size="3",
+                on_change=lambda value: IndexState.find_search_value(value),
             ),
             height="90vh",
             width="100%",

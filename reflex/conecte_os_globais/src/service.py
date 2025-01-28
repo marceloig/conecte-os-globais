@@ -13,6 +13,14 @@ class GlobalService:
         ators = GlobalModel.query(f'ATOR-INDEX#{index}')
         return ators.next()
     
+    def  get_all_novelas(self, ator: str):
+        novelas = []
+        result = GlobalModel.query(f'ATOR#{ator}')
+        for novela in result:
+            novelas.append(novela)
+        
+        return novelas
+    
 class NodeService:
 
     def new_node(self, id: str, label: str, x: int=0, y: int=0):
