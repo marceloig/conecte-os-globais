@@ -75,8 +75,8 @@ class IndexState(BaseState):
     def start_game(self):
         global_service = GlobalService()
         novelas = []
-        novelas += global_service.get_all_novelas(self.ator_name_left)
-        novelas += global_service.get_all_novelas(self.ator_name_right)
+        novelas += global_service.get_all_contains_novelas(self.search_value)
+        novelas += global_service.get_all_contains_novelas(self.search_value)
         print(novelas)
 
     @rx.event

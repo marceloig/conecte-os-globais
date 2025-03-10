@@ -1,6 +1,7 @@
 
 
 from .dynamodb import GlobalModel
+from .neo4j import Neo4jRepository
 import random
 
 class GlobalService:
@@ -13,13 +14,16 @@ class GlobalService:
         ators = GlobalModel.query(f'ATOR-INDEX#{index}')
         return ators.next()
     
-    def  get_all_novelas(self, ator: str):
+    """ def  get_all_novelas(self, ator: str):
         novelas = []
         result = GlobalModel.query(f'ATOR#{ator}')
         for novela in result:
             novelas.append(novela)
         
-        return novelas
+        return novelas """
+    
+    def  get_all_contains_novelas(self, novela: str):
+        return Neo4jRepository().get_all_contains_novelas(novela.capitalize())
     
 class NodeService:
 
