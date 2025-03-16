@@ -30,16 +30,15 @@ class IndexState(BaseState):
     
     nodes: List[Dict[str, Any]] = []
     edges: List[Dict[str, Any]] = []
-    ator_name_left: str = ""
-    ator_name_right: str = ""
-    novela_name_left: str = ""
-    novela_name_right: str = ""
+    globais: list[str] = []
+    obras: list[str] = []
     search_value: str = ""
+    record: Dict[str, Any] = {}
 
     @rx.event
     def add_random_node(self):
         new_node_id = f'{len(self.nodes) + 1}'
-        node_type = random.choice(["default"])
+        node_type = "default"
         # Label is random number
         label = new_node_id
         x = random.randint(0, 500)
@@ -62,22 +61,18 @@ class IndexState(BaseState):
 
         global_left = global_service.get_random_global()
         global_right = global_service.get_random_global()
-        node_left = node_service.new_node(id=global_left.pk, label=global_left.ator)
-        node_right = node_service.new_node(id=global_right.pk, label=global_right.ator, x=200)
+        node_left = node_service.new_node(id=global_left, label=global_left, data_type="global", x=0)
+        node_right = node_service.new_node(id=global_right, label=global_right, data_type="global", x=200)
         
         self.nodes.append(node_left)
         self.nodes.append(node_right)
-        self.ator_name_left = global_left.ator
-        self.ator_name_right = global_right.ator
 
     
     @rx.event
-    def start_game(self):
+    def add_node(self):
         global_service = GlobalService()
-        novelas = []
-        novelas += global_service.get_all_contains_novelas(self.search_value)
-        novelas += global_service.get_all_contains_novelas(self.search_value)
-        print(novelas)
+        self.obras += global_service.get_all_contains_novelas(self.search_value)
+        print(self.obras)
 
     @rx.event
     def clear_graph(self):
@@ -86,8 +81,23 @@ class IndexState(BaseState):
 
     @rx.event
     def find_search_value(self, value: str):
-        self.search_value = value
+        if len(value) < 3:
+            return
         
+        self.search_value = value
+        global_service = GlobalService()
+        
+        self.obras = global_service.find_novelas_by_atores(nodes=self.nodes)
+        self.globais = global_service.find_atores_by_novelas(nodes=self.nodes)
+        
+        node_service = NodeService()
+        self.record = node_service.filter_records(
+            search_value=self.search_value,
+            records_atores=self.globais,
+            records_novelas=self.obras,
+        )
+        print(self.record)
+
 
 
     @rx.event
@@ -165,9 +175,10 @@ def index_page() -> rx.Component:
                     on_click=IndexState.sort_global,
                 ),
                 rx.button(
-                    "Iniciar",
-                    on_click=IndexState.start_game,
+                    "Adicionar",
+                    on_click=IndexState.add_node,
                 ),
+                
                 rx.button(
                     "Reiniciar",
                     on_click=IndexState.clear_graph,

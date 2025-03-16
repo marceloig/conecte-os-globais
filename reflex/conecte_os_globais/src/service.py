@@ -1,37 +1,66 @@
 
 
-from .dynamodb import GlobalModel
 from .neo4j import Neo4jRepository
-import random
+import logging
+
+logger = logging.getLogger(__name__)
 
 class GlobalService:
+    neo4j = Neo4jRepository()
 
     def __init__(self):
         ...
 
     def get_random_global(self):
-        index = random.randint(0, 20699)
-        ators = GlobalModel.query(f'ATOR-INDEX#{index}')
-        return ators.next()
-    
-    """ def  get_all_novelas(self, ator: str):
-        novelas = []
-        result = GlobalModel.query(f'ATOR#{ator}')
-        for novela in result:
-            novelas.append(novela)
-        
-        return novelas """
+        return self.neo4j.get_random_atores()
     
     def  get_all_contains_novelas(self, novela: str):
-        return Neo4jRepository().get_all_contains_novelas(novela.capitalize())
+        return self.neo4j.get_all_contains_novelas(novela.capitalize())
+    
+    def  get_all_contains_atores(self, ator: str):
+        return self.neo4j.get_all_contains_atores(ator.capitalize())
+    
+    def find_novelas_by_atores(self, nodes: list=[]):
+        atores = []
+        for node in nodes:
+            if node['data']['type'] == 'global':
+                ator_name = node['data']['label']
+                atores.append(ator_name)
+        
+        return self.neo4j.find_records_by_atores(atores)
+    
+    def find_atores_by_novelas(self, nodes: list=[]):
+        novelas = []
+        for node in nodes:
+            if node['data']['type'] == 'obra':
+                novela_name = node['data']['label']
+                novelas.append(novela_name)
+        
+        return self.neo4j.find_records_by_novelas(novelas)
+
     
 class NodeService:
 
-    def new_node(self, id: str, label: str, x: int=0, y: int=0):
+    def new_node(self, id: str, label: str, data_type: str, x: int=0, y: int=0):
         return {
             'id': id,
             'type': 'default',
-            'data': {'label': label},
+            'data': {'label': label, 'type': data_type},
             "draggable": True,
             'position': {'x': x, 'y': y},
         }
+    
+    def filter_records(self, search_value: str, records_atores: list[dict], records_novelas: list[dict]):
+        logger.info("Filtering node by search value: %s", search_value)
+        logger.info("Atores: %s", records_atores)
+        logger.info("Novelas: %s", records_novelas)
+
+        obras = [record for record in records_novelas if search_value.lower() in record["novela"].lower()]
+        globais = [record for record in records_atores if search_value.lower() in record["ator"].lower()]
+
+        if obras:
+            return obras[0]
+        if globais:
+            return globais[0]
+        
+        return None
