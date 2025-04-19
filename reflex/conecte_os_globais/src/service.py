@@ -1,12 +1,12 @@
 
 
-from .neo4j import Neo4jRepository
+from .neo4j import NeptuneRepository
 import logging
 
 logger = logging.getLogger(__name__)
 
 class GlobalService:
-    neo4j = Neo4jRepository()
+    neo4j = NeptuneRepository()
 
     def __init__(self):
         ...
