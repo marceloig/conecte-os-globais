@@ -1,9 +1,10 @@
 from neo4j import GraphDatabase
 from neo4j import Driver
+from os import getenv
 
 # URI examples: "neo4j://localhost", "neo4j+s://xxx.databases.neo4j.io"
-URI = "neo4j+ssc://bab2e0c4.databases.neo4j.io"
-AUTH = ("neo4j", "ZBNHkZ7wbfol4-ECsjGX2YQHAp0pz1qZNRmg3Oym0wo")
+URI = getenv("NEO4J_URI", "neo4j://localhost:56789")
+AUTH = ("neo4j", "0zHaB^P01*#@gRv8")
 
 
 
