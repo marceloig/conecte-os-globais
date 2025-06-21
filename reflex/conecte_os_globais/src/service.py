@@ -1,24 +1,24 @@
 
 
-from .neo4j import NeptuneRepository
+from .neptune import NeptuneRepository
 import logging
 
 logger = logging.getLogger(__name__)
 
 class GlobalService:
-    neo4j = NeptuneRepository()
+    neptune = NeptuneRepository()
 
     def __init__(self):
         ...
 
     def get_random_global(self):
-        return self.neo4j.get_random_atores()
+        return self.neptune.get_random_atores()
     
     def  get_all_contains_novelas(self, novela: str):
-        return self.neo4j.get_all_contains_novelas(novela.capitalize())
+        return self.neptune.get_all_contains_novelas(novela.capitalize())
     
     def  get_all_contains_atores(self, ator: str):
-        return self.neo4j.get_all_contains_atores(ator.capitalize())
+        return self.neptune.get_all_contains_atores(ator.capitalize())
     
     def find_novelas_by_atores(self, nodes: list=[]):
         atores = []
@@ -27,7 +27,7 @@ class GlobalService:
                 ator_name = node['data']['label']
                 atores.append(ator_name)
         
-        return self.neo4j.find_records_by_atores(atores)
+        return self.neptune.find_records_by_atores(atores)
     
     def find_atores_by_novelas(self, nodes: list=[]):
         novelas = []
@@ -36,7 +36,7 @@ class GlobalService:
                 novela_name = node['data']['label']
                 novelas.append(novela_name)
         
-        return self.neo4j.find_records_by_novelas(novelas)
+        return self.neptune.find_records_by_novelas(novelas)
 
     
 class NodeService:

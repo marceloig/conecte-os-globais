@@ -1,10 +1,13 @@
 import requests
 import os
+import logging
 
 # AWS Neptune endpoint and port
 NEPTUNE_ENDPOINT = os.getenv("NEPTUNE_ENDPOINT", "localhost")
 NEPTUNE_PORT = os.getenv("NEPTUNE_PORT", 7777)
 NEPTUNE_URL = f"https://{NEPTUNE_ENDPOINT}:{NEPTUNE_PORT}/openCypher"
+
+logger = logging.getLogger(__name__)
 
 class NeptuneRepository:
 
@@ -12,12 +15,13 @@ class NeptuneRepository:
         # Test connection to Neptune
         try:
             response = requests.get(NEPTUNE_URL)
-            if response.status_code == 200:
+            if response.status_code == 200 or response.status_code == 400:
                 print("Connection to Neptune successful!")
             else:
                 print(f"Failed to connect to Neptune: {response.status_code}")
         except Exception as e:
-            print(f"Error connecting to Neptune: {e}")
+            logger.error("Error connecting to Neptune: %s", e)
+            raise e
 
     def run_query(self, query: str, params: dict = None) -> list[dict]:
         payload = {"query": query}
@@ -29,7 +33,7 @@ class NeptuneRepository:
             response.raise_for_status()
             return response.json().get("results", [])
         except requests.exceptions.RequestException as e:
-            print(f"Query failed: {e}")
+            logger.error("Query failed: %s", e)
             return []
 
     def get_all_contains_novelas(self, novela: str) -> list[str]:

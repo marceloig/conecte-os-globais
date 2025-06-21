@@ -1,0 +1,10 @@
+{
+    "source": "s3://985539781022-us-east-2-neptune-import/",
+    "format": "opencypher",
+    "iamRoleArn": "arn:aws:iam::985539781022:role/NeptuneLoadFromS3",
+    "region": "us-east-2",
+    "failOnError": "FALSE",
+    "parallelism": "MEDIUM",
+    "updateSingleCardinalityProperties": "FALSE",
+    "queueRequest": "TRUE"
+  }
