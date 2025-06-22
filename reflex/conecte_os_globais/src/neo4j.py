@@ -19,9 +19,9 @@ class Neo4jRepository:
 
     def get_all_contains_novelas(self, novela: str) -> list[str]:
         query = """
-                MATCH (n:Novela)
-                WHERE n.novela CONTAINS $novela
-                RETURN n.novela AS novela
+                MATCH (n:Novelas)
+                WHERE n.name CONTAINS $novela
+                RETURN n.name AS novela
                 """
         with self.driver.session() as session:
             result = session.run(
@@ -32,9 +32,9 @@ class Neo4jRepository:
     
     def get_all_contains_atores(self, ator: str) -> list[str]:
         query = """
-                MATCH (a:Ator)
-                WHERE a.ator CONTAINS $ator
-                RETURN a.ator AS ator
+                MATCH (a:Atores)
+                WHERE a.name CONTAINS $ator
+                RETURN a.name AS ator
                 """
         with self.driver.session() as session:
             result = session.run(
@@ -45,8 +45,8 @@ class Neo4jRepository:
         
     def get_random_atores(self) -> str:
         query = """
-                MATCH (a:Ator)
-                RETURN a.ator AS nome
+                MATCH (a:Atores)
+                RETURN a.name AS nome
                 ORDER BY rand()
                 LIMIT 1
                 """
@@ -56,9 +56,9 @@ class Neo4jRepository:
         
     def find_records_by_atores(self, atores: list[str]) -> list[str]:
         query = """
-                MATCH (n:Novela)-[:atuacao]->(a:Ator)
-                WHERE a.ator IN $atores
-                RETURN n.novela AS novela, a.ator AS ator
+                MATCH (a:Atores)-[:atua_em]->(n:Novelas)
+                WHERE a.name IN $atores
+                RETURN n.name AS novela, a.name AS ator
                 """
         with self.driver.session() as session:
             result = session.run(
@@ -69,9 +69,9 @@ class Neo4jRepository:
     
     def find_records_by_novelas(self, novelas: list[str]) -> list[str]:
         query = """
-                MATCH (n:Novela)-[:atuacao]->(a:Ator)
-                WHERE n.novela IN $novelas
-                RETURN a.ator AS ator, n.novela AS novela
+                MATCH (a:Atores)-[:atua_em]->(n:Novelas)
+                WHERE n.name IN $novelas
+                RETURN a.name AS ator, n.name AS novela
                 """
         with self.driver.session() as session:
             result = session.run(

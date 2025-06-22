@@ -9,5 +9,6 @@ def template(
         rx.container(
             page(), 
             width="100%",
-        )
+        ),
+        width="100%",
     )
