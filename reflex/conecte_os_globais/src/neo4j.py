@@ -1,12 +1,14 @@
 from neo4j import GraphDatabase
 from neo4j import Driver
 from os import getenv
+from dotenv import load_dotenv
 
-# URI examples: "neo4j://localhost", "neo4j+s://xxx.databases.neo4j.io"
-URI = getenv("NEO4J_URI", "neo4j://localhost:56789")
-AUTH = ("neo4j", "0zHaB^P01*#@gRv8")
+load_dotenv()
 
-
+URI = getenv("NEO4J_URI")
+NEO4J_AUTH_USER = getenv("NEO4J_AUTH_USER")
+NEO4J_AUTH_PASSWORD = getenv("NEO4J_AUTH_PASSWORD")
+AUTH = (NEO4J_AUTH_USER, NEO4J_AUTH_PASSWORD)
 
 class Neo4jRepository:
 
