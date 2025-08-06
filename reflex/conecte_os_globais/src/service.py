@@ -64,13 +64,24 @@ class GlobalService:
         
         
         return None
+    
+    def find_filter_shortest_path(self, initial_atores: list[str], atores: list[str], novelas: list[str]) -> dict:
+        logger.info("Finding shortest path with initial atores: %s, atores: %s, novelas: %s", initial_atores, atores, novelas)
+        result = self.neo4j.find_filter_shortest_path(initial_atores, atores, novelas)
+        if not result:
+            return
+        
+        return {
+            'path': result.get('path', []),
+            'length': result.get('grau', 0)
+        }
 
     
 class ReactFlowService:
 
     def new_node(self, id: str, label: str, data_type: str, x_initial: int, y_initial: int, direction: str):
-        x = random.randint(int(x_initial), 200)
-        y = random.randint(int(y_initial), 200)
+        x = random.randint(int(x_initial), int(x_initial) + 200)
+        y = random.randint(int(y_initial), int(y_initial) + 200)
         if direction == 'left':
             x = -x
             y = -y

@@ -38,6 +38,8 @@ class IndexState(BaseState):
     search_value: str = ""
     item: Dict[str, Any] = None
     records: List[Dict[str, Any]] = []
+    source_ator: str = ""
+    target_ator: str = ""
     
     @rx.event
     def sort_ator(self):
@@ -45,10 +47,10 @@ class IndexState(BaseState):
         global_service = GlobalService()
         node_service = ReactFlowService()
 
-        global_left = global_service.get_random_global()
-        global_right = global_service.get_random_global()
-        node_left = node_service.new_node(id=global_left, label=global_left, data_type="ator", x_initial=100, y_initial=-200, direction="left")
-        node_right = node_service.new_node(id=global_right, label=global_right, data_type="ator", x_initial=100, y_initial=100, direction="right")
+        self.source_ator = global_service.get_random_global()
+        self.target_ator = global_service.get_random_global()
+        node_left = node_service.new_node(id=self.source_ator, label=self.source_ator, data_type="ator", x_initial=100, y_initial=-200, direction="left")
+        node_right = node_service.new_node(id=self.target_ator, label=self.target_ator, data_type="ator", x_initial=100, y_initial=100, direction="right")
         
         self.nodes.append(node_left)
         self.nodes.append(node_right)
@@ -126,29 +128,83 @@ class IndexState(BaseState):
         self.nodes.append(new_node)
         self.edges.append(new_edge)
         self.get_records()
+        self.validate_path()
+
+    def validate_path(self):
+        global_service = GlobalService()
+        if len(self.nodes) < 2:
+            return
+
+        atores = [node['id'] for node in self.nodes if node['data']['type'] == 'ator']
+        novelas = [node['id'] for node in self.nodes if node['data']['type'] == 'novela']
+        
+        if not atores or not novelas:
+            return
+        
+        path = global_service.find_filter_shortest_path(
+            initial_atores=[self.source_ator, self.target_ator], 
+            atores=atores, 
+            novelas=novelas
+        )
+        
+        logger.info("Shortest Path: %s", path)
 
     @rx.event
-    def on_nodes_change(self, node_changes: List[Dict[str, Any]]):
-        # Receives a list of Nodes in case of events like dragging
-        map_id_to_new_position = defaultdict(dict)
-
-        # Loop over the changes and store the new position
-        for change in node_changes:
-            if (
-                change["type"] == "position"
-                and change.get("dragging") == True
-            ):
-                map_id_to_new_position[
-                    change["id"]
-                ] = change["position"]
-
-        # Loop over the nodes and update the position
-        for i, node in enumerate(self.nodes):
-            if node["id"] in map_id_to_new_position:
-                new_position = map_id_to_new_position[
-                    node["id"]
-                ]
-                self.nodes[i]["position"] = new_position
+    def on_nodes_change(self, changes: List[Dict[str, Any]]) -> None:
+        """
+        Handler equivalente ao onNodesChange do ReactFlow
+        Este é o método que você chamaria nos eventos de mudança dos nós
+        """
+        self.apply_node_changes(changes)
+    
+    def apply_node_changes(self, changes: List[Dict[str, Any]]) -> None:
+        """
+        Aplica mudanças aos nós, equivalente ao applyNodeChanges do ReactFlow
+        """
+        current_nodes = self.nodes.copy()
+        
+        for change in changes:
+            change_type = change.get("type")
+            node_id = change.get("id")
+            
+            if change_type == "position":
+                # Atualiza posição do nó
+                for i, node in enumerate(current_nodes):
+                    if node.get("id") == node_id:
+                        if "position" not in current_nodes[i]:
+                            current_nodes[i]["position"] = {}
+                        current_nodes[i]["position"].update(change.get("position", {}))
+                        break
+                        
+            elif change_type == "dimensions":
+                # Atualiza dimensões do nó
+                for i, node in enumerate(current_nodes):
+                    if node.get("id") == node_id:
+                        current_nodes[i]["width"] = change.get("dimensions", {}).get("width")
+                        current_nodes[i]["height"] = change.get("dimensions", {}).get("height")
+                        break
+                        
+            elif change_type == "select":
+                # Atualiza seleção do nó
+                for i, node in enumerate(current_nodes):
+                    if node.get("id") == node_id:
+                        current_nodes[i]["selected"] = change.get("selected", False)
+                        break
+                        
+            elif change_type == "remove":
+                # Remove nó
+                current_nodes = [node for node in current_nodes if node.get("id") != node_id]
+                
+            elif change_type == "add":
+                # Adiciona novo nó
+                new_node = change.get("item", {})
+                current_nodes.append(new_node)
+                
+            elif change_type == "reset":
+                # Reseta todos os nós
+                current_nodes = change.get("items", [])
+        
+        self.nodes = current_nodes
 
 def show_records(record: Dict[str, Any]) -> rx.Component:
     """Show a customer in a table row."""

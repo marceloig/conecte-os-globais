@@ -81,3 +81,23 @@ class Neo4jRepository:
                 novelas=novelas
             )
             return [{"novela": record["novela"], "ator": record["ator"]} for record in result]
+    
+    def find_filter_shortest_path(self, initial_atores: list[str], atores: list[str], novelas: list[str]) -> dict:
+        query = """
+                MATCH path = shortestPath((source:Atores {name: $source_ator})-[*]-(target:Atores {name: $target_ator}))
+                WHERE ALL(n in nodes(path) WHERE 
+                (('Atores' IN labels(n) AND n.name IN $atores) OR 
+                ('Novelas' IN labels(n) AND n.name IN $novelas))
+                )
+                RETURN path, length(path) as grau
+                """
+        with self.driver.session() as session:
+            result = session.run(
+                query,
+                source_ator=initial_atores[0],
+                target_ator=initial_atores[1],
+                atores=atores,
+                novelas=novelas
+            )
+            
+            return result.single()
