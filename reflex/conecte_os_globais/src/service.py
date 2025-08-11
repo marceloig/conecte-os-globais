@@ -70,8 +70,8 @@ class GlobalService:
 class ReactFlowService:
 
     def new_node(self, id: str, label: str, data_type: str, x_initial: int, y_initial: int, direction: str):
-        x = random.randint(int(x_initial), int(x_initial) + 200)
-        y = random.randint(int(y_initial), int(y_initial) + 200)
+        x = random.randint(int(x_initial), int(x_initial) + 100)
+        y = random.randint(int(y_initial), int(y_initial) + 100)
         if direction == 'left':
             x = -x
             y = -y

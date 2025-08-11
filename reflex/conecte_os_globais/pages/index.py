@@ -89,9 +89,7 @@ class IndexState(BaseState):
                 "id": f"e{new_edge['source']}-{new_edge['target']}",
                 "source": new_edge["source"],
                 "target": new_edge["target"],
-                "label": random.choice(
-                    ["+", "-", "*", "/"]
-                ),
+                "label": "-",
                 "animated": True,
             }
         )
@@ -118,11 +116,11 @@ class IndexState(BaseState):
             data_type=self.item['type'], 
             x_initial=last_node['position']['x'], 
             y_initial=last_node['position']['y'], 
-            direction=self.item['direction']
+            direction=last_node['data']['direction'], 
             )
         self.nodes.append(new_node)
         for source in self.item['sources']:
-            new_edge = flow_service.new_edge(source=source, target=self.item['target'])
+            new_edge = flow_service.new_edge(source=source, target=self.item['target'], animated=True)
             self.edges.append(new_edge)
         self.get_records()
         self.validate_path()
