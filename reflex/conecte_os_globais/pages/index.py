@@ -97,8 +97,9 @@ class IndexState(BaseState):
         )
 
     @rx.event
-    def add_node(self):
+    def add_node(self, search_value):
         global_service = GlobalService()
+        self.search_value = search_value.strip()
 
         if [node for node in self.nodes if node['id'] == self.search_value]:
             logger.info("Node already exists")
@@ -146,6 +147,11 @@ class IndexState(BaseState):
         logger.info("Shortest Path: %s", path)
         if path:
             self.dialog_opened = True
+
+    @rx.event
+    def set_search_from_record(self, value: str):
+        """Set search_value from table row button click"""
+        self.search_value = value
 
     @rx.event
     def on_nodes_change(self, changes: List[Dict[str, Any]]) -> None:
@@ -207,8 +213,38 @@ class IndexState(BaseState):
 def show_records(record: Dict[str, Any]) -> rx.Component:
     """Show a customer in a table row."""
     return rx.table.row(
-        rx.table.cell(record.get("novela")),
-        rx.table.cell(record.get("ator")),
+        rx.table.cell(
+            rx.hstack(
+                rx.text(record.get("novela")),
+                rx.cond(
+                    record.get("novela"),
+                    rx.button(
+                        "+",
+                        on_click=lambda: IndexState.add_node(record.get("novela")),
+                        size="1",
+                        variant="soft"
+                    ),
+                    rx.box()  # Empty box when novela is None
+                ),
+                spacing="1",
+            )
+        ),
+        rx.table.cell(
+            rx.hstack(
+                rx.text(record.get("ator")),
+                rx.cond(
+                    record.get("ator"),
+                    rx.button(
+                        "+",
+                        on_click=lambda: IndexState.add_node(record.get("ator")),
+                        size="1",
+                        variant="soft"
+                    ),
+                    rx.box()  # Empty box when ator is None
+                ),
+                spacing="1",
+            )
+        ),
     )
 
 def alert_dialog_end_game():
@@ -236,10 +272,6 @@ def alert_dialog_end_game():
                 ),
             ),
             open=BaseState.dialog_opened,
-        ),
-        rx.button(
-            "Button to Open the Dialog",
-            on_click=BaseState.dialog_open,
         ),
     )
     
@@ -281,20 +313,6 @@ def index_page() -> rx.Component:
                 fit_view=True,
                 only_render_visible_elements=True
             ),
-            rx.hstack(
-                rx.input(
-                    value=IndexState.search_value,
-                    on_change=IndexState.set_search_value,
-                    placeholder="Cole aqui o nome da novela ou ator...",
-                    size="3",
-                    width="50%",
-                ),
-                rx.button(
-                    "Adicionar",
-                    on_click=IndexState.add_node,
-                ),
-                width="100%",
-            ),
             rx.scroll_area(
                 rx.table.root(
                     rx.table.header(
@@ -311,7 +329,7 @@ def index_page() -> rx.Component:
                     width="100%",
                 ),
                 type="always",
-                style={"height": 300},
+                style={"height": 600},
             ),
             height="100vh",
             width="100%",

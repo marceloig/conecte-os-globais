@@ -61,6 +61,7 @@ class Neo4jRepository:
                 MATCH (a:Atores)-[:atua_em]->(n:Novelas)
                 WHERE a.name IN $atores
                 RETURN n.name AS novela, a.name AS ator
+                ORDER BY n.name, a.name
                 """
         with self.driver.session() as session:
             result = session.run(
@@ -74,6 +75,7 @@ class Neo4jRepository:
                 MATCH (a:Atores)-[:atua_em]->(n:Novelas)
                 WHERE n.name IN $novelas
                 RETURN a.name AS ator, n.name AS novela
+                ORDER BY a.name, n.name
                 """
         with self.driver.session() as session:
             result = session.run(
