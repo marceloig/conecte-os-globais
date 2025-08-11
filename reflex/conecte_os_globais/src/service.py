@@ -39,31 +39,21 @@ class GlobalService:
         
         return self.neo4j.find_records_by_novelas(novelas)
     
-    def find_item(self, search_value: str, records_atores: list[dict], records_novelas: list[dict]):
+    def find_item(self, search_value: str, records: list[dict]):
         logger.info("Filtering node by search value: %s", search_value)
-        logger.info("Atores: %s", records_atores)
-        logger.info("Novelas: %s", records_novelas)
 
-        novelas = [record for record in records_novelas if search_value.lower() in record["novela"].lower()]
-        atores = [record for record in records_atores if search_value.lower() in record["ator"].lower()]
-
-        if novelas:
-            item = novelas[0]
-            return {
-                'source': item["ator"],
-                'target': item["novela"],
-                'type': 'novela',
-            }
-        if atores:
-            item = atores[0]
-            return {
-                'source': item["novela"],
-                'target': item["ator"],
-                'type': 'ator',
-            }
+        item = {'sources': [], 'target': '', 'type': '', 'direction': ''}
+        for record in records:
+            if "novela" in record and search_value.lower() in record["novela"].lower():
+                item['type'] = 'novela'
+                item['sources'].append(record['ator'])
+                item['target'] = record['novela']
+            if "ator" in record and search_value.lower() in record["ator"].lower():
+                item['type'] = 'ator'
+                item['sources'].append(record['novela'])
+                item['target'] = record['ator']
         
-        
-        return None
+        return item
     
     def find_filter_shortest_path(self, initial_atores: list[str], atores: list[str], novelas: list[str]) -> dict:
         logger.info("Finding shortest path with initial atores: %s, atores: %s, novelas: %s", initial_atores, atores, novelas)

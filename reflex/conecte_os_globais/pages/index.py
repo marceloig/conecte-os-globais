@@ -40,6 +40,7 @@ class IndexState(BaseState):
     records: List[Dict[str, Any]] = []
     source_ator: str = ""
     target_ator: str = ""
+    path: Dict[str, Any] = None
     
     @rx.event
     def sort_ator(self):
@@ -68,8 +69,6 @@ class IndexState(BaseState):
         self.novelas = global_service.find_novelas_by_atores(nodes=self.nodes)
         self.atores = global_service.find_atores_by_novelas(nodes=self.nodes)
 
-        logger.info("Grafo Novelas: %s", self.novelas)
-        logger.info("Grafo Atores: %s", self.atores)
         self.records = self.novelas + self.atores
         
         return self.records
@@ -79,10 +78,7 @@ class IndexState(BaseState):
         # Iterate over the existing edges
         for i, edge in enumerate(self.edges):
             # If we find an edge with the same ID as the new edge
-            if (
-                edge["id"]
-                == f"e{new_edge['source']}-{new_edge['target']}"
-            ):
+            if (edge["id"] == f"e{new_edge['source']}-{new_edge['target']}"):
                 # Delete the existing edge
                 del self.edges[i]
                 break
@@ -110,23 +106,23 @@ class IndexState(BaseState):
 
         self.item = global_service.find_item(
             search_value=self.search_value,
-            records_atores=self.atores,
-            records_novelas=self.novelas,
+            records=self.records
         )
-        print(self.item)
+        
         flow_service = ReactFlowService()
-        source_node = [node for node in self.nodes if node['id'] == self.item['source']][0]
+        last_node = self.nodes[-1]
         new_node = flow_service.new_node(
             id=self.item['target'], 
             label=self.item['target'], 
             data_type=self.item['type'], 
-            x_initial=source_node['position']['x'], 
-            y_initial=source_node['position']['y'], 
-            direction=source_node['data']['direction']
+            x_initial=last_node['position']['x'], 
+            y_initial=last_node['position']['y'], 
+            direction=self.item['direction']
             )
-        new_edge = flow_service.new_edge(source=self.item['source'], target=self.item['target'])
         self.nodes.append(new_node)
-        self.edges.append(new_edge)
+        for source in self.item['sources']:
+            new_edge = flow_service.new_edge(source=source, target=self.item['target'])
+            self.edges.append(new_edge)
         self.get_records()
         self.validate_path()
 
@@ -148,6 +144,8 @@ class IndexState(BaseState):
         )
         
         logger.info("Shortest Path: %s", path)
+        if path:
+            self.dialog_opened = True
 
     @rx.event
     def on_nodes_change(self, changes: List[Dict[str, Any]]) -> None:
@@ -211,6 +209,38 @@ def show_records(record: Dict[str, Any]) -> rx.Component:
     return rx.table.row(
         rx.table.cell(record.get("novela")),
         rx.table.cell(record.get("ator")),
+    )
+
+def alert_dialog_end_game():
+    return rx.box(
+        rx.alert_dialog.root(
+            rx.alert_dialog.content(
+                rx.alert_dialog.title("Fim de jogo"),
+                rx.alert_dialog.description(
+                    "Parabéns! Você encontrou o caminho mais curto entre os globais.",
+                ),
+                rx.flex(
+                    rx.alert_dialog.cancel(
+                        rx.button(
+                            "Fim de jogo",
+                            on_click=BaseState.dialog_open,
+                        ),
+                    ),
+                    rx.alert_dialog.action(
+                        rx.button(
+                            "Jogar novamente",
+                            on_click=BaseState.dialog_open,
+                        ),
+                    ),
+                    spacing="3",
+                ),
+            ),
+            open=BaseState.dialog_opened,
+        ),
+        rx.button(
+            "Button to Open the Dialog",
+            on_click=BaseState.dialog_open,
+        ),
     )
     
 @rx.page(route="/")
@@ -286,5 +316,5 @@ def index_page() -> rx.Component:
             height="100vh",
             width="100%",
         ),
+        alert_dialog_end_game()
     )
-
