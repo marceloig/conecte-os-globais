@@ -7,12 +7,11 @@ import {
 } from '@xyflow/react';
 import React, { memo, useState, useEffect, useCallback } from 'react';
 import { env } from "@/config/env";
-import axios from "axios";
+import axios from "axios";   
 
-
-function NodeAvatar(props: any) {
+function GraphNode(props: any) {
     const [rows, setRows] = useState([]);
-    const { getNodes, getEdges, setNodes, setEdges } = useReactFlow();
+    const { getNodes, addNodes, addEdges } = useReactFlow();
 
     useEffect(() => {
         const fetchData = async () => {
@@ -32,8 +31,6 @@ function NodeAvatar(props: any) {
                         label: item.name
                     }
                 }));
-                console.log("Rows fetched:", rows);
-                console.log("Current Nodes:", currentNodes);
                 const filter_rows = rows.filter((row: any) => {
                     return !currentNodes.some((node: Node) => node.data.label === row.data.label);
                 });
@@ -45,14 +42,11 @@ function NodeAvatar(props: any) {
         fetchData();
     }, []);
 
-    const addNewNodeAvatar = useCallback((sourceNode: any, row: any) => {
-
-        const currentNodes = getNodes();
-        const currentEdges = getEdges();
+    const addNewGraphNode = useCallback((sourceNode: any, row: any) => {
 
         const newNode: Node = {
             id: row.data.label,
-            type: 'nodeAvatar',
+            type: 'graphNode',
             position: {
                 x: sourceNode.positionAbsoluteX,
                 y: sourceNode.positionAbsoluteY + 100,
@@ -69,10 +63,10 @@ function NodeAvatar(props: any) {
             animated: true,
         };
 
-        setNodes(currentNodes.concat(newNode));
-        setEdges(currentEdges.concat(newEdge));
-        
-    }, [getNodes, setNodes]);
+        addNodes(newNode);
+        addEdges(newEdge);
+
+    }, [addNodes, addEdges]);
 
     return (
         <Popover.Root>
@@ -113,7 +107,7 @@ function NodeAvatar(props: any) {
                                     <Table.Cell>{row.data.label}</Table.Cell>
                                     <Table.Cell>
                                         <Popover.Close>
-                                            <Button size="1" onClick={() => addNewNodeAvatar(props, row)}>
+                                            <Button size="1" onClick={() => addNewGraphNode(props, row)}>
                                                 <PlusIcon />
                                             </Button>
                                         </Popover.Close>
@@ -135,4 +129,4 @@ function NodeAvatar(props: any) {
     );
 }
 
-export default memo(NodeAvatar);
+export default memo(GraphNode);

@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.models import HealthResponse, Ator, Novela
+from app.models import HealthResponse, Ator, Novela, PathRequest, PathResponse
 from ...db.neo4j import Neo4jRepository
 
 router = APIRouter()
@@ -40,3 +40,15 @@ async def get_random_ator():
         id=nome,
         name=nome
     )
+@router.post("/graph/shortest_path", response_model=PathResponse)
+async def shortest_path(path_request: PathRequest):
+    print(path_request)
+    
+    # record = repository.find_filter_shortest_path(initial_atores, atores, novelas)
+    # if record:
+    #     return PathResponse(
+    #         path=record["path"],
+    #         grau=record["grau"],
+    #         found=True
+    #     )
+    return PathResponse()

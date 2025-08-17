@@ -1,9 +1,7 @@
 "use client";
 
-import React, { useCallback, forwardRef, type ReactNode } from "react";
+import React, { forwardRef, type ReactNode } from "react";
 import {
-    useReactFlow,
-    useNodeId,
     Handle,
     Position,
     type NodeProps,
@@ -11,8 +9,6 @@ import {
 
 import { BaseNode } from "@/components/base-node";
 import { Box } from '@radix-ui/themes';
-import axios from "axios";
-import { env } from "@/config/env";
 
 export type PlaceholderNodeProps = Partial<NodeProps> & {
     children?: ReactNode;
@@ -20,55 +16,11 @@ export type PlaceholderNodeProps = Partial<NodeProps> & {
 
 export const PlaceholderNode = forwardRef<HTMLDivElement, PlaceholderNodeProps>(
     ({ children }, ref) => {
-        const id = useNodeId();
-        const { setNodes, setEdges } = useReactFlow();
-
-        const handleClick = useCallback(async () => {
-            if (!id) return;
-
-            try {
-                const response = await axios.get(`${env.APP_URL}/api/v1/atores/random`);
-                // Handle the response as needed, for example:
-                console.log("Random Ator:", response.data);
-                const ator = response.data;
-
-                setEdges((edges) =>
-                    edges.map((edge) =>
-                        edge.target === id ? { ...edge, animated: false } : edge,
-                    ),
-                );
-
-                setNodes((nodes) => {
-                    const updatedNodes = nodes.map((node) => {
-                        if (node.id === id) {
-                            // Customize this function to update the node's data as needed.
-                            // For example, you can change the label or other properties of the node.
-
-                            return {
-                                ...node,
-                                id: ator.id,
-                                data: { ...node.data, label: ator.name, type: "ator" },
-                                type: "nodeAvatar",
-                            };
-                        }
-                        return node;
-                    });
-                    return updatedNodes;
-                });
-            } catch (error) {
-                if (axios.isAxiosError(error)) {
-                    console.error("API error:", error.response?.data || error.message);
-                } else {
-                    console.error("Unexpected error:", error);
-                }
-            }
-        }, [id, setEdges, setNodes]);
 
         return (
             <BaseNode style={{ cursor: 'pointer' }}
                 ref={ref}
                 className="w-[150px] border-dashed border-gray-400 bg-card text-center"
-                onClick={handleClick}
             >
                 <Box>+</Box>
                 <Handle
