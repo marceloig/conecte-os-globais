@@ -27,9 +27,10 @@ export const PlaceholderNode = forwardRef<HTMLDivElement, PlaceholderNodeProps>(
             if (!id) return;
 
             try {
-                const response = await axios.post(`${env.APP_URL}`);
+                const response = await axios.get(`${env.APP_URL}/api/v1/atores/random`);
                 // Handle the response as needed, for example:
-                console.log("Node created:", response.data);
+                console.log("Random Ator:", response.data);
+                const ator = response.data;
 
                 setEdges((edges) =>
                     edges.map((edge) =>
@@ -45,7 +46,8 @@ export const PlaceholderNode = forwardRef<HTMLDivElement, PlaceholderNodeProps>(
 
                             return {
                                 ...node,
-                                data: { ...node.data, label: "Node Teste Name" },
+                                id: ator.id,
+                                data: { ...node.data, label: ator.name, type: "ator" },
                                 type: "nodeAvatar",
                             };
                         }
@@ -63,7 +65,7 @@ export const PlaceholderNode = forwardRef<HTMLDivElement, PlaceholderNodeProps>(
         }, [id, setEdges, setNodes]);
 
         return (
-            <BaseNode
+            <BaseNode style={{ cursor: 'pointer' }}
                 ref={ref}
                 className="w-[150px] border-dashed border-gray-400 bg-card text-center"
                 onClick={handleClick}

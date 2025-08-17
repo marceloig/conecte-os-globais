@@ -19,21 +19,15 @@ import NodeAvatar from './components/NodeAvatar';
 import {PlaceholderNode} from './components/NewNode';
 
 const initialNodes: Node[] = [
-  /* {
-    id: '1',
-    type: 'nodeAvatar',
-    position: { x: 250, y: 25 },
-    data: { label: 'Node 1' },
-  }, */
   {
     id: "0",
-    data: { label: 'Node 1' },
+    data: {direction: 'left' },
     position: { x: -150, y: 0 },
     type: "newNode",
   },
   {
     id: "1",
-    data: {},
+    data: {direction: 'right' },
     position: { x: 150, y: 0 },
     type: "newNode",
   },

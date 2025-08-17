@@ -2,7 +2,7 @@ import * as z from 'zod';
 
 const createEnv = () => {
     const EnvSchema = z.object({
-        APP_URL: z.string().optional().default('http://demo0062187.mockable.io'),
+        APP_URL: z.string().optional().default('http://localhost:8000'),
         APP_MOCK_API_PORT: z.string().optional().default('8080'),
     });
 
