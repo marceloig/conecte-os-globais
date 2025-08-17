@@ -2,16 +2,18 @@
 import { Box, Card, Flex, Avatar, Text, Button, Popover, Table, ScrollArea } from '@radix-ui/themes';
 import { PlusIcon } from '@radix-ui/react-icons';
 import {
-    Handle, Position, useReactFlow,
+    Handle, Position, useReactFlow, useNodeId,
     type Node, type Edge,
 } from '@xyflow/react';
 import React, { memo, useState, useEffect, useCallback } from 'react';
 import { env } from "@/config/env";
-import axios from "axios";   
+import axios from "axios";
 
 function GraphNode(props: any) {
     const [rows, setRows] = useState([]);
     const { getNodes, addNodes, addEdges } = useReactFlow();
+
+    const nodeId = useNodeId();
 
     useEffect(() => {
         const fetchData = async () => {
@@ -31,6 +33,18 @@ function GraphNode(props: any) {
                         label: item.name
                     }
                 }));
+                const sourceNodes = currentNodes.filter((currentNode: any) => {
+                    return rows.some((row: any) => row.data.label === currentNode.data.label);
+                });
+                for (const sourceNode of sourceNodes) {
+                    const newEdge: Edge = {
+                        id: `${sourceNode.id}-${nodeId}`,
+                        source: sourceNode.id,
+                        target: nodeId || '',
+                        animated: false,
+                    };
+                    addEdges(newEdge);
+                }
                 const filter_rows = rows.filter((row: any) => {
                     return !currentNodes.some((node: Node) => node.data.label === row.data.label);
                 });
@@ -56,17 +70,9 @@ function GraphNode(props: any) {
                 type: row.data.type
             },
         };
-        const newEdge: Edge = {
-            id: `${sourceNode.id}-${newNode.id}`,
-            source: sourceNode.id,
-            target: newNode.id,
-            animated: true,
-        };
-
         addNodes(newNode);
-        addEdges(newEdge);
 
-    }, [addNodes, addEdges]);
+    }, [addNodes]);
 
     return (
         <Popover.Root>

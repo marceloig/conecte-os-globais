@@ -6,6 +6,7 @@ import {
   useEdgesState,
   useReactFlow,
   applyNodeChanges,
+  useNodesInitialized,
   Controls,
   Background,
   BackgroundVariant,
@@ -24,7 +25,6 @@ import Modal from './components/Modal';
 import { PlaceholderNode } from './components/NewNode';
 import { env } from "@/config/env";
 import axios from "axios";
-import { id } from 'zod/v4/locales';
 
 const initialNodes: Node[] = [
   {
@@ -67,13 +67,13 @@ function App() {
                 setNodes([
                     {
                         id: ator_left.name,
-                        data: { label: ator_left.name, type: 'graphNode', direction: 'left' },
+                        data: { label: ator_left.name, type: 'ator', direction: 'left' },
                         position: { x: -150, y: 0 },
                         type: "graphNode",
                     },
                     {
                         id: ator_right.name,
-                        data: { label: ator_right.name, type: 'graphNode', direction: 'right' },
+                        data: { label: ator_right.name, type: 'ator', direction: 'right' },
                         position: { x: 150, y: 0 },
                         type: "graphNode",
                     }

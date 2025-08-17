@@ -43,12 +43,16 @@ async def get_random_ator():
 @router.post("/graph/shortest_path", response_model=PathResponse)
 async def shortest_path(path_request: PathRequest):
     print(path_request)
+    initial_atores = [node.name for node in path_request.initial_nodes]
+    atores = [node.name for node in path_request.nodes if node.type == 'ator']
+    novelas = [node.name for node in path_request.nodes if node.type == 'novela']
     
-    # record = repository.find_filter_shortest_path(initial_atores, atores, novelas)
-    # if record:
-    #     return PathResponse(
-    #         path=record["path"],
-    #         grau=record["grau"],
-    #         found=True
-    #     )
+    record = repository.find_filter_shortest_path(initial_atores, atores, novelas)
+    if record:
+        for path in record["path"]:
+            print(path)
+        return PathResponse(
+            grau=record["grau"],
+            found=True
+        )
     return PathResponse()
