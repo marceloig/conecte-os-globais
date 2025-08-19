@@ -30,7 +30,8 @@ function GraphNode(props: any) {
                 const rows = res.data.map((item: any) => ({
                     data: {
                         type: data_type,
-                        label: item.name
+                        label: item.name,
+                        profileImg: item.profile_img,
                     }
                 }));
                 const sourceNodes = currentNodes.filter((currentNode: any) => {
@@ -67,7 +68,8 @@ function GraphNode(props: any) {
             },
             data: {
                 label: row.data.label,
-                type: row.data.type
+                type: row.data.type,
+                profileImg: row.data.profile_img,
             },
         };
         addNodes(newNode);
@@ -84,7 +86,7 @@ function GraphNode(props: any) {
                         <Flex gap="3" align="center">
                             <Avatar
                                 size="3"
-                                src="https://images.unsplash.com/photo-1607346256330-dee7af15f7c5?&w=64&h=64&dpr=2&q=70&crop=focalpoint&fp-x=0.67&fp-y=0.5&fp-z=1.4&fit=crop"
+                                src={props.data.profileImg}
                                 radius="full"
                                 fallback="T"
                             />

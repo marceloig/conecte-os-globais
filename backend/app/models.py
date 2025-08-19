@@ -1,4 +1,5 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from typing import Optional
 
 class HealthResponse(BaseModel):
     status: str
@@ -11,6 +12,8 @@ class Novela(BaseModel):
 class Ator(BaseModel):
     id: str
     name: str
+    #profile_img: str = None
+    profile_img: Optional[str]
 
 class GraphNode(BaseModel):
     type: str

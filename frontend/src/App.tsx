@@ -55,37 +55,34 @@ function App() {
   const [graph, setGraph] = useState({});
 
   const newGame = useCallback(async () => {
-            try {
-                const response_1 = await axios.get(`${env.APP_URL}/api/v1/atores/random`);
-                const response_2 = await axios.get(`${env.APP_URL}/api/v1/atores/random`);
-                // Handle the response as needed, for example:
-                console.log("Random Ator:", response_1.data);
-                console.log("Random Ator:", response_2.data);
-                const ator_left = response_1.data;
-                const ator_right = response_2.data;
+    try {
+      const response_1 = await axios.get(`${env.APP_URL}/api/v1/atores/random`);
+      const response_2 = await axios.get(`${env.APP_URL}/api/v1/atores/random`);
+      const ator_left = response_1.data;
+      const ator_right = response_2.data;
 
-                setNodes([
-                    {
-                        id: ator_left.name,
-                        data: { label: ator_left.name, type: 'ator', direction: 'left' },
-                        position: { x: -150, y: 0 },
-                        type: "graphNode",
-                    },
-                    {
-                        id: ator_right.name,
-                        data: { label: ator_right.name, type: 'ator', direction: 'right' },
-                        position: { x: 150, y: 0 },
-                        type: "graphNode",
-                    }
-                ]);
-            } catch (error) {
-                if (axios.isAxiosError(error)) {
-                    console.error("API error:", error.response?.data || error.message);
-                } else {
-                    console.error("Unexpected error:", error);
-                }
-            }
-        }, [setNodes]);
+      setNodes([
+        {
+          id: ator_left.name,
+          data: { label: ator_left.name, type: 'ator', direction: 'left', profileImg: ator_left.profile_img, },
+          position: { x: -150, y: 0 },
+          type: "graphNode",
+        },
+        {
+          id: ator_right.name,
+          data: { label: ator_right.name, type: 'ator', direction: 'right', profileImg: ator_right.profile_img, },
+          position: { x: 150, y: 0 },
+          type: "graphNode",
+        }
+      ]);
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error("API error:", error.response?.data || error.message);
+      } else {
+        console.error("Unexpected error:", error);
+      }
+    }
+  }, [setNodes]);
 
   const onNodesChange = useCallback(
     (changes: any) => {
@@ -94,17 +91,16 @@ function App() {
           console.warn("Enough nodes to execute shortest path");
           const fetchData = async () => {
             try {
-              let url = `${env.APP_URL}/api/v1/graph/shortest_path`;
               const filterNodes = nodes.filter((node: Node) => node.type === 'graphNode');
               const graphNodes = filterNodes.map((node: Node) => ({
                 type: node.data.type,
                 name: node.data.label,
               }));
               if (graphNodes.length < 3) {
-                console.warn("Not enough nodes to create a path");
+                console.info("Not enough nodes to verify nodes path");
                 return;
               }
-
+              let url = `${env.APP_URL}/api/v1/graph/shortest_path`;
               const res = await axios.post(url, {
                 initial_nodes: graphNodes.slice(0, 2),
                 nodes: graphNodes,
@@ -148,7 +144,7 @@ function App() {
               debug={false}
             >
               <Controls />
-              <Panel position="top-left">
+              <Panel position="top-center">
                 <Button onClick={newGame}>Novo jogo</Button>
               </Panel>
               <Background variant={BackgroundVariant.Dots} gap={12} size={1} />

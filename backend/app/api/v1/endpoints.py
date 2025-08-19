@@ -1,11 +1,12 @@
 from fastapi import APIRouter
 from app.models import HealthResponse, Ator, Novela, PathRequest, PathResponse
 from ...db.neo4j import Neo4jRepository
+from ..service import TMDBService
 
 router = APIRouter()
 router_health = APIRouter()
 repository = Neo4jRepository()
-
+tmdb_service = TMDBService()
 
 @router_health.get("/health", response_model=HealthResponse)
 async def health_check():
@@ -29,17 +30,20 @@ async def list_novelas_by_ator(name: str):
 async def list_atores_by_novela(name: str):
     atores = repository.list_atores_by_novela(name)
     return [Ator(
-            id=novela,
-            name=novela,
-            ) for novela in atores]
+            id=ator,
+            name=ator,
+            ) for ator in atores]
 
 @router.get("/atores/random", response_model=Ator)
 async def get_random_ator():
     nome = repository.get_random_atores()
+    person = await tmdb_service.search_person(nome)
     return Ator(
         id=nome,
-        name=nome
+        name=nome,
+        profile_img = f'https://image.tmdb.org/t/p/original{person.get("profile_path")}'
     )
+
 @router.post("/graph/shortest_path", response_model=PathResponse)
 async def shortest_path(path_request: PathRequest):
     print(path_request)
