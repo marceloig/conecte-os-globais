@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional
+from neo4j import graph
 
 class HealthResponse(BaseModel):
     status: str
@@ -8,12 +9,12 @@ class HealthResponse(BaseModel):
 class Novela(BaseModel):
     id: str
     name: str
+    img: Optional[str] = ''
 
 class Ator(BaseModel):
     id: str
     name: str
-    #profile_img: str = None
-    profile_img: Optional[str]
+    img: Optional[str] = ''
 
 class GraphNode(BaseModel):
     type: str
@@ -23,6 +24,6 @@ class PathRequest(BaseModel):
     initial_nodes: list[GraphNode]  # List of initial actor names
     nodes: list[GraphNode]
 class PathResponse(BaseModel):
-    path: str = ''  # Default value for path
+    nodes: list[GraphNode] = None  # Default value for path
     grau: int = 0  # Default value for degree of separation
     found: bool = False

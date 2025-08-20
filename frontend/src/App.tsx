@@ -64,13 +64,13 @@ function App() {
       setNodes([
         {
           id: ator_left.name,
-          data: { label: ator_left.name, type: 'ator', direction: 'left', profileImg: ator_left.profile_img, },
+          data: { label: ator_left.name, type: 'ator', direction: 'left', img: ator_left.img, },
           position: { x: -150, y: 0 },
           type: "graphNode",
         },
         {
           id: ator_right.name,
-          data: { label: ator_right.name, type: 'ator', direction: 'right', profileImg: ator_right.profile_img, },
+          data: { label: ator_right.name, type: 'ator', direction: 'right', img: ator_right.img, },
           position: { x: 150, y: 0 },
           type: "graphNode",
         }
@@ -119,7 +119,7 @@ function App() {
 
       );
     },
-    [nodes.length]
+    [setNodes]
   );
 
   return (

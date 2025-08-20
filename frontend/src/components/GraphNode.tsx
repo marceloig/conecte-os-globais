@@ -21,7 +21,7 @@ function GraphNode(props: any) {
                 const currentNodes = getNodes();
                 let url = `${env.APP_URL}/api/v1/atores/${props.data.label}/novelas`;
                 let data_type = 'novela';
-                if (props.data.type == 'novela') {
+                if (props.data.type === 'novela') {
                     url = `${env.APP_URL}/api/v1/novelas/${props.data.label}/atores`;
                     data_type = 'ator';
                 }
@@ -31,7 +31,7 @@ function GraphNode(props: any) {
                     data: {
                         type: data_type,
                         label: item.name,
-                        profileImg: item.profile_img,
+                        img: item.img,
                     }
                 }));
                 const sourceNodes = currentNodes.filter((currentNode: any) => {
@@ -57,19 +57,25 @@ function GraphNode(props: any) {
         fetchData();
     }, []);
 
-    const addNewGraphNode = useCallback((sourceNode: any, row: any) => {
+    const addNewGraphNode = useCallback(async (sourceNode: any, row: any) => {
+
+        let url = `${env.APP_URL}/api/v1/atores/${row.data.label}`;
+        if (row.data.type === 'novela') {
+            url = `${env.APP_URL}/api/v1/novelas/${row.data.label}`;
+        }
+        const response = await axios.get(url);
 
         const newNode: Node = {
             id: row.data.label,
             type: 'graphNode',
             position: {
                 x: sourceNode.positionAbsoluteX,
-                y: sourceNode.positionAbsoluteY + 100,
+                y: sourceNode.positionAbsoluteY + 150,
             },
             data: {
                 label: row.data.label,
                 type: row.data.type,
-                profileImg: row.data.profile_img,
+                img: response.data.img,
             },
         };
         addNodes(newNode);
@@ -86,7 +92,7 @@ function GraphNode(props: any) {
                         <Flex gap="3" align="center">
                             <Avatar
                                 size="3"
-                                src={props.data.profileImg}
+                                src={props.data.img}
                                 radius="full"
                                 fallback="T"
                             />
@@ -128,7 +134,7 @@ function GraphNode(props: any) {
                 <Flex gap="3" mt="3" justify="end">
                     <Popover.Close>
                         <Button variant="soft" color="gray">
-                            Cancel
+                            Fechar
                         </Button>
                     </Popover.Close>
                 </Flex>

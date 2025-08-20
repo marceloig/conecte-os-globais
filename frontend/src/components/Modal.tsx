@@ -1,10 +1,11 @@
 
 import { Flex, Text, Button, Dialog, TextField } from '@radix-ui/themes';
-import { memo } from 'react';
+import { memo, useCallback } from 'react';
+import { useReactFlow, type Edge, } from '@xyflow/react';
 
 interface Graph {
     grau?: number;
-    path?: string
+    nodes?: any;
     found?: boolean;
 }
 
@@ -15,9 +16,28 @@ interface ModalProps {
 }
 
 function Modal({ open = false, onOpenChange, graph }: ModalProps) {
+    const { addEdges } = useReactFlow();
+
+    const handleOpenChange = useCallback((newOpen: boolean) => {
+        console.log("[handleOpenChange] executing...", graph)
+
+        for (let index = 0; index < graph?.nodes.length - 1; index++) {
+            const element = graph?.nodes[index];
+            const nextElement = graph?.nodes[index + 1];
+            const newEdge: Edge = {
+                id: `${element.name}-${nextElement.name}`,
+                source: element.name,
+                target: nextElement.name || '',
+                animated: true,
+            };
+            addEdges(newEdge);
+        }
+        onOpenChange?.(newOpen);
+    }, [onOpenChange]);
+
 
     return (
-        <Dialog.Root open={open} onOpenChange={onOpenChange}>
+        <Dialog.Root open={open} onOpenChange={handleOpenChange}>
             <Dialog.Content maxWidth="450px">
                 <Dialog.Title>Fim de jogo</Dialog.Title>
                 <Flex direction="column" gap="3">

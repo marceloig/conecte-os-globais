@@ -101,7 +101,12 @@ class TMDBService:
         """
         endpoint = "/search/tv"
         params = {"query": query, "page": page}
-        return await self._make_request(endpoint, params)
+        response = await self._make_request(endpoint, params)
+
+        if response['results']:
+            result = max(response['results'], key=lambda item: item["popularity"])
+            return result
+        return {}
     
     async def search_person(self, query: str, page: int = 1) -> Dict[str, Any]:
         """
