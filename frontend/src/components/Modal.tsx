@@ -1,7 +1,7 @@
 
 import { Flex, Text, Button, Dialog, TextField } from '@radix-ui/themes';
 import { memo, useCallback } from 'react';
-import { useReactFlow, type Edge, } from '@xyflow/react';
+import { useReactFlow, useEdges, type Edge, } from '@xyflow/react';
 
 interface Graph {
     grau?: number;
@@ -16,22 +16,25 @@ interface ModalProps {
 }
 
 function Modal({ open = false, onOpenChange, graph }: ModalProps) {
-    const { addEdges } = useReactFlow();
+    const { getEdges, addEdges } = useReactFlow();
 
     const handleOpenChange = useCallback((newOpen: boolean) => {
-        console.log("[handleOpenChange] executing...", graph)
+        const edges = getEdges()
+        console.log("[handleOpenChange] executing...", edges)
 
-        for (let index = 0; index < graph?.nodes.length - 1; index++) {
+        for (let index = 0; index < edges.length; index++) {
             const element = graph?.nodes[index];
             const nextElement = graph?.nodes[index + 1];
-            const newEdge: Edge = {
-                id: `${element.name}-${nextElement.name}`,
-                source: element.name,
-                target: nextElement.name || '',
-                animated: true,
-            };
-            addEdges(newEdge);
+            let edge = edges[index]
+            if(edge.id === `${element.name}-${nextElement.name}`){
+                edge.animated = true
+            } else if(edge.id === `${nextElement.name}-${element.name}`){
+                edge.animated = true
+            }
+
+            addEdges(edge);
         }
+
         onOpenChange?.(newOpen);
     }, [onOpenChange]);
 

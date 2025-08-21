@@ -46,7 +46,6 @@ async def get_random_ator():
 @router.get("/novelas/{name}", response_model=Novela)
 async def search_novela(name: str):
     show = await tmdb_service.search_tv_shows(name)
-    print(show)
     return Novela(
         id=name,
         name=name,
@@ -56,7 +55,6 @@ async def search_novela(name: str):
 @router.get("/atores/{name}", response_model=Ator)
 async def search_ator(name: str):
     person = await tmdb_service.search_person(name)
-    print(person)
     return Ator(
         id=name,
         name=name,

@@ -103,9 +103,12 @@ class TMDBService:
         params = {"query": query, "page": page}
         response = await self._make_request(endpoint, params)
 
-        if response['results']:
-            result = max(response['results'], key=lambda item: item["popularity"])
-            return result
+        if not response['results']:
+            return {}
+        
+        for result in response['results']:
+            if 'BR' == result['origin_country'][0]:
+                return result
         return {}
     
     async def search_person(self, query: str, page: int = 1) -> Dict[str, Any]:
@@ -123,9 +126,11 @@ class TMDBService:
         params = {"query": query, "page": page}
         response = await self._make_request(endpoint, params)
 
-        if response['results']:
-            return response['results'][0]
-        return {}
+        if not response['results']:
+            return {}
+        
+        return response['results'][0]
+        
     
     async def get_movie_details(self, movie_id: int) -> Dict[str, Any]:
         """

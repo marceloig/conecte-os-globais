@@ -53,7 +53,7 @@ function App() {
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [openDialog, setOpenDialog] = useState(false);
   const [graph, setGraph] = useState({});
-
+  
   const newGame = useCallback(async () => {
     try {
       const response_1 = await axios.get(`${env.APP_URL}/api/v1/atores/random`);
@@ -87,11 +87,11 @@ function App() {
   const onNodesChange = useCallback(
     (changes: any) => {
       setNodes((nds) => {
-        if (nodes.length > 2 && changes[0].type === 'dimensions') {
+        if (nds.length > 2 && changes[0].type === 'dimensions') {
           console.warn("Enough nodes to execute shortest path");
           const fetchData = async () => {
             try {
-              const filterNodes = nodes.filter((node: Node) => node.type === 'graphNode');
+              const filterNodes = nds.filter((node: Node) => node.type === 'graphNode');
               const graphNodes = filterNodes.map((node: Node) => ({
                 type: node.data.type,
                 name: node.data.label,
