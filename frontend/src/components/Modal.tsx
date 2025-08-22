@@ -19,24 +19,29 @@ function Modal({ open = false, onOpenChange, graph }: ModalProps) {
     const { getEdges, addEdges } = useReactFlow();
 
     const handleOpenChange = useCallback((newOpen: boolean) => {
-        const edges = getEdges()
-        console.log("[handleOpenChange] executing...", edges)
+        const edges = getEdges();
+        console.log("[handleOpenChange] executing...", graph, open);
 
         for (let index = 0; index < edges.length; index++) {
-            const element = graph?.nodes[index];
-            const nextElement = graph?.nodes[index + 1];
-            let edge = edges[index]
-            if(edge.id === `${element.name}-${nextElement.name}`){
-                edge.animated = true
-            } else if(edge.id === `${nextElement.name}-${element.name}`){
-                edge.animated = true
-            }
+            let edge = edges[index];
+            for (let nodeIndex = 0; nodeIndex < graph?.nodes.length - 1; nodeIndex++) {
+                const element = graph?.nodes[nodeIndex];
+                const nextElement = graph?.nodes[nodeIndex + 1];
 
+                if (edge.id === `${element.name}-${nextElement.name}`) {
+                    edge.animated = true;
+                    break;
+                } else if (edge.id === `${nextElement.name}-${element.name}`) {
+                    edge.animated = true;
+                    break;
+                }
+
+            }
             addEdges(edge);
         }
 
         onOpenChange?.(newOpen);
-    }, [onOpenChange]);
+    }, [open]);
 
 
     return (

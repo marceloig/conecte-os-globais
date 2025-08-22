@@ -53,7 +53,7 @@ function App() {
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
   const [openDialog, setOpenDialog] = useState(false);
   const [graph, setGraph] = useState({});
-  
+
   const newGame = useCallback(async () => {
     try {
       const response_1 = await axios.get(`${env.APP_URL}/api/v1/atores/random`);
@@ -105,14 +105,20 @@ function App() {
                 initial_nodes: graphNodes.slice(0, 2),
                 nodes: graphNodes,
               });
-              const graph = res.data
-              setGraph(graph)
-              setOpenDialog(graph.found);
+              return res.data
+
             } catch (error) {
               console.error(error);
             }
           };
-          fetchData();
+
+          fetchData().then((graph) => {
+            setGraph(graph)
+            setOpenDialog(graph.found);
+          }).catch((reason) => {
+            console.error('[App] [onNodesChange]', reason)
+          });
+
         }
         return applyNodeChanges(changes, nds)
       }
