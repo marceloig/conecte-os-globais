@@ -9,12 +9,14 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 # Set work directory
 WORKDIR /app
 
-# Install system dependencies
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
+# Install system dependencies with retry logic
+RUN apt-get update --fix-missing \
+    && apt-get install -y --no-install-recommends --fix-broken \
         build-essential \
         curl \
-    && rm -rf /var/lib/apt/lists/*
+        ca-certificates \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Create non-root user
 RUN groupadd --gid 1000 appuser \
