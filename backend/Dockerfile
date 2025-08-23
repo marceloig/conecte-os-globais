@@ -1,5 +1,5 @@
-# Use Python 3.13 slim image
-FROM python:3.13-slim
+# Use Python 3.13 slim image with ARM64 support
+FROM --platform=linux/arm64 python:3.13-slim
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1 \

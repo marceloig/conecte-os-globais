@@ -19,7 +19,8 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import "@radix-ui/themes/styles.css";
-import { Box, Container, Flex, Heading, Button } from '@radix-ui/themes';
+import { Box, Container, Flex, Heading, Button, Badge } from '@radix-ui/themes';
+import { PlayIcon } from '@radix-ui/react-icons';
 import GraphNode from './components/GraphNode';
 import Modal from './components/Modal';
 import { PlaceholderNode } from './components/NewNode';
@@ -134,6 +135,11 @@ function App() {
         <Box>
           <Heading>Conecte os Globais</Heading>
         </Box>
+        <Flex justify="end">
+          <Badge size="3" variant="solid" color="yellow">
+            AO VIVO
+          </Badge>
+        </Flex>
 
         <Box
           width="100%"
@@ -151,7 +157,8 @@ function App() {
             >
               <Controls />
               <Panel position="top-center">
-                <Button onClick={newGame}>Novo jogo</Button>
+
+                <Button onClick={newGame}><PlayIcon /> Novo jogo</Button>
               </Panel>
               <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
             </ReactFlow>

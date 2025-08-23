@@ -1,5 +1,6 @@
 
-import { Flex, Text, Button, Dialog, TextField } from '@radix-ui/themes';
+import { Flex, Text, Button, Dialog, TextField, Heading, Badge} from '@radix-ui/themes';
+import { StarFilledIcon } from '@radix-ui/react-icons';
 import { memo, useCallback } from 'react';
 import { useReactFlow, useEdges, type Edge, } from '@xyflow/react';
 
@@ -49,18 +50,28 @@ function Modal({ open = false, onOpenChange, graph }: ModalProps) {
             <Dialog.Content maxWidth="450px">
                 <Dialog.Title>Fim de jogo</Dialog.Title>
                 <Flex direction="column" gap="3">
-                    <Text>Parabéns! Você encontrou uma ligação.</Text>
+                    <Heading size="6" className="text-yellow-400 font-bold mb-2">
+                        🏆 PARABÉNS! 🏆
+                    </Heading>
+                    <Badge size="3" variant="solid" color="yellow" className="bg-yellow-400 text-blue-900 font-bold">
+                        <StarFilledIcon />
+                        CONEXÃO ENCONTRADA!
+                    </Badge>
+
+                    <Text size="4" className="text-center text-blue-100">
+                        Você conseguiu conectar os artistas Globais através de suas conexões!
+                    </Text>
                 </Flex>
 
                 <Flex gap="3" mt="4" justify="end">
                     <Dialog.Close>
                         <Button variant="soft" color="gray">
-                            Cancel
+                            Fechar
                         </Button>
                     </Dialog.Close>
-                    <Dialog.Close>
-                        <Button>Save</Button>
-                    </Dialog.Close>
+                    {/* <Dialog.Close>
+                        <Button>Compartilhar</Button>
+                    </Dialog.Close> */}
                 </Flex>
             </Dialog.Content>
         </Dialog.Root>

@@ -1,5 +1,5 @@
 
-import { Box, Card, Flex, Avatar, Text, Button, Popover, Table, ScrollArea } from '@radix-ui/themes';
+import { Box, Card, Flex, Avatar, Text, Button, Popover, Table, ScrollArea, Badge } from '@radix-ui/themes';
 import { PlusIcon } from '@radix-ui/react-icons';
 import {
     Handle, Position, useReactFlow, useNodeId,
@@ -97,6 +97,13 @@ function GraphNode(props: any) {
                                 fallback="T"
                             />
                             <Box>
+                                <Badge
+                                    size="1"
+                                    variant="outline"
+                                    color={props.data.type === 'ator' ? 'blue' : 'orange'}
+                                >
+                                    {props.data.type === 'ator' ? 'ARTISTA' : 'NOVELA'}
+                                </Badge>
                                 <Text as="div" size="2" weight="bold">
                                     {props.data.label}
                                 </Text>
