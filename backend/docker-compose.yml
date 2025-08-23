@@ -14,15 +14,15 @@ services:
       - db
 
   db:
-    image: postgres:15-alpine
+    image: neo4j:2025.07.0
     environment:
-      POSTGRES_DB: conecte_os_globais
+      NEO4J_AUTH: conecte_os_globais
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
-      - "5432:5432"
+      - "7474:7474"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - neo4j_data:/var/lib/neo4j/data
 
 volumes:
-  postgres_data:
+  neo4j_data:
