@@ -1,7 +1,9 @@
 from pydantic_settings import BaseSettings
 from typing import Optional
+from os import getenv
+from dotenv import load_dotenv
 
-
+load_dotenv()
 class Settings(BaseSettings):
     app_name: str = "Conecte os Globais API"
     version: str = "1.0.0"
@@ -17,7 +19,7 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 30
     
     # CORS
-    backend_cors_origins: list[str] = ["http://localhost:3000", "http://localhost:5173"]
+    backend_cors_origins: list[str] = [getenv("FRONTEND_URL", "http://localhost:5173")]
     
     class Config:
         env_file = ".env"
