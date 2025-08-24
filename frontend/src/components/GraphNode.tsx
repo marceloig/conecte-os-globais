@@ -5,7 +5,7 @@ import {
     Handle, Position, useReactFlow, useNodeId,
     type Node, type Edge,
 } from '@xyflow/react';
-import React, { memo, useState, useEffect, useCallback } from 'react';
+import { memo, useState, useEffect, useCallback } from 'react';
 import { env } from "@/config/env";
 import axios from "axios";
 

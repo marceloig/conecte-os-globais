@@ -1,12 +1,9 @@
-import { useCallback, useState, useEffect } from 'react';
+import { useCallback, useState } from 'react';
 import {
   ReactFlow,
-  addEdge,
   useNodesState,
   useEdgesState,
-  useReactFlow,
   applyNodeChanges,
-  useNodesInitialized,
   Controls,
   Background,
   BackgroundVariant,
@@ -14,8 +11,6 @@ import {
   ReactFlowProvider,
   type Node,
   type Edge,
-  type NodeChange,
-  type Connection,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import "@radix-ui/themes/styles.css";
@@ -50,8 +45,8 @@ const nodeTypes = {
 };
 
 function App() {
-  const [nodes, setNodes, getNodes] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const [nodes, setNodes] = useNodesState(initialNodes);
+  const [edges, onEdgesChange] = useEdgesState(initialEdges);
   const [openDialog, setOpenDialog] = useState(false);
   const [graph, setGraph] = useState({});
 

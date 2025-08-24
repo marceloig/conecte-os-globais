@@ -1,8 +1,8 @@
 
-import { Flex, Text, Button, Dialog, TextField, Heading, Badge} from '@radix-ui/themes';
+import { Flex, Text, Button, Dialog, Heading, Badge} from '@radix-ui/themes';
 import { StarFilledIcon } from '@radix-ui/react-icons';
 import { memo, useCallback } from 'react';
-import { useReactFlow, useEdges, type Edge, } from '@xyflow/react';
+import { useReactFlow} from '@xyflow/react';
 
 interface Graph {
     grau?: number;
