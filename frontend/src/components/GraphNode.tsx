@@ -21,10 +21,10 @@ function GraphNode(props: any) {
         const fetchData = async () => {
             try {
                 const currentNodes = getNodes();
-                let url = `${env.APP_URL}/api/v1/atores/${props.data.label}/novelas`;
+                let url = `${env.API_ENDPOINT}/api/v1/atores/${props.data.label}/novelas`;
                 let data_type = 'novela';
                 if (props.data.type === 'novela') {
-                    url = `${env.APP_URL}/api/v1/novelas/${props.data.label}/atores`;
+                    url = `${env.API_ENDPOINT}/api/v1/novelas/${props.data.label}/atores`;
                     data_type = 'ator';
                 }
                 const res = await axios.get(url);
@@ -62,9 +62,9 @@ function GraphNode(props: any) {
 
     const addNewGraphNode = useCallback(async (sourceNode: any, row: any) => {
 
-        let url = `${env.APP_URL}/api/v1/atores/${row.data.label}`;
+        let url = `${env.API_ENDPOINT}/api/v1/atores/${row.data.label}`;
         if (row.data.type === 'novela') {
-            url = `${env.APP_URL}/api/v1/novelas/${row.data.label}`;
+            url = `${env.API_ENDPOINT}/api/v1/novelas/${row.data.label}`;
         }
         const response = await axios.get(url);
 
