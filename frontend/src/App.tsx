@@ -54,8 +54,8 @@ function App() {
 
   const newGame = useCallback(async () => {
     try {
-      const response_1 = await axios.get(`${env.API_ENDPOINT}/api/v1/atores/random`);
-      const response_2 = await axios.get(`${env.API_ENDPOINT}/api/v1/atores/random`);
+      const response_1 = await axios.get(`${env.VITE_API_ENDPOINT}/api/v1/atores/random`);
+      const response_2 = await axios.get(`${env.VITE_API_ENDPOINT}/api/v1/atores/random`);
       const ator_left = response_1.data;
       const ator_right = response_2.data;
 
@@ -98,7 +98,7 @@ function App() {
                 console.info("Not enough nodes to verify nodes path");
                 return;
               }
-              let url = `${env.API_ENDPOINT}/api/v1/graph/shortest_path`;
+              let url = `${env.VITE_API_ENDPOINT}/api/v1/graph/shortest_path`;
               const res = await axios.post(url, {
                 initial_nodes: graphNodes.slice(0, 2),
                 nodes: graphNodes,
