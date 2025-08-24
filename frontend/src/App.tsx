@@ -46,7 +46,7 @@ const nodeTypes = {
 
 function App() {
   const [nodes, setNodes] = useNodesState(initialNodes);
-  const [edges, onEdgesChange] = useEdgesState(initialEdges);
+  const [edges] = useEdgesState(initialEdges);
   const [openDialog, setOpenDialog] = useState(false);
   const [graph, setGraph] = useState({});
 
