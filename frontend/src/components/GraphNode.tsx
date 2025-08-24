@@ -1,5 +1,5 @@
 
-import { Box, Card, Flex, Avatar, Text, Button, Popover, Table, ScrollArea, Badge } from '@radix-ui/themes';
+import { Box, Card, Flex, Avatar, Text, Button, Popover, Table, ScrollArea, Badge, TextField } from '@radix-ui/themes';
 import { PlusIcon } from '@radix-ui/react-icons';
 import {
     Handle, Position, useReactFlow, useNodeId,
@@ -11,7 +11,9 @@ import axios from "axios";
 
 function GraphNode(props: any) {
     const [rows, setRows] = useState([]);
+    const [filterValue, setFilterValue] = useState('');
     const { getNodes, addNodes, addEdges } = useReactFlow();
+
 
     const nodeId = useNodeId();
 
@@ -49,13 +51,14 @@ function GraphNode(props: any) {
                 const filter_rows = rows.filter((row: any) => {
                     return !currentNodes.some((node: Node) => node.data.label === row.data.label);
                 });
+              
                 setRows(filter_rows);
             } catch (error) {
                 console.error(error);
             }
         };
         fetchData();
-    }, []);
+    }, [nodeId]);
 
     const addNewGraphNode = useCallback(async (sourceNode: any, row: any) => {
 
@@ -80,7 +83,11 @@ function GraphNode(props: any) {
         };
         addNodes(newNode);
 
-    }, [addNodes]);
+    }, []);
+
+    const filteredRows = rows.filter((row: any) => 
+        row.data.label.toLowerCase().includes(filterValue.toLowerCase())
+    );
 
     return (
         <Popover.Root>
@@ -100,9 +107,9 @@ function GraphNode(props: any) {
                                 <Badge
                                     size="1"
                                     variant="outline"
-                                    color={props.data.type === 'ator' ? 'blue' : 'orange'}
+                                    color={props.data.type === 'novela' ? 'orange' : 'blue'}
                                 >
-                                    {props.data.type === 'ator' ? 'ARTISTA' : 'NOVELA'}
+                                    {props.data.type === 'novela' ? 'NOVELA' : 'ARTISTA'}
                                 </Badge>
                                 <Text as="div" size="2" weight="bold">
                                     {props.data.label}
@@ -114,6 +121,13 @@ function GraphNode(props: any) {
             </Popover.Trigger>
 
             <Popover.Content>
+                <Box mb="2">
+                    <TextField.Root
+                        placeholder={`Filtrar ${props.data.type === 'ator' ? 'novelas' : 'atores'}...`}
+                        value={filterValue}
+                        onChange={(e) => setFilterValue(e.target.value)}
+                    />
+                </Box>
                 <ScrollArea type="always" scrollbars="vertical" style={{ height: 200 }}>
                     <Table.Root>
                         <Table.Header>
@@ -123,7 +137,7 @@ function GraphNode(props: any) {
                             </Table.Row>
                         </Table.Header>
                         <Table.Body>
-                            {rows.map((row: any, index: number) => (
+                            {filteredRows.map((row: any, index: number) => (
                                 <Table.Row key={index}>
                                     <Table.Cell>{row.data.label}</Table.Cell>
                                     <Table.Cell>

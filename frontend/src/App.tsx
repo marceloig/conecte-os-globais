@@ -4,6 +4,7 @@ import {
   useNodesState,
   useEdgesState,
   applyNodeChanges,
+  applyEdgeChanges,
   Controls,
   Background,
   BackgroundVariant,
@@ -11,6 +12,7 @@ import {
   ReactFlowProvider,
   type Node,
   type Edge,
+  type OnEdgesChange,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import "@radix-ui/themes/styles.css";
@@ -46,7 +48,7 @@ const nodeTypes = {
 
 function App() {
   const [nodes, setNodes] = useNodesState(initialNodes);
-  const [edges] = useEdgesState(initialEdges);
+  const [edges, setEdges] = useEdgesState(initialEdges);
   const [openDialog, setOpenDialog] = useState(false);
   const [graph, setGraph] = useState({});
 
@@ -124,6 +126,11 @@ function App() {
     [setNodes]
   );
 
+  const onEdgesChange: OnEdgesChange = useCallback(
+    (changes) => setEdges((eds) => applyEdgeChanges(changes, eds)),
+    [setEdges],
+  );
+
   return (
     <Container size="4" p="4">
       <Flex direction="column">
@@ -145,6 +152,7 @@ function App() {
               nodes={nodes}
               edges={edges}
               onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
               fitView
               nodeTypes={nodeTypes}
               debug={false}

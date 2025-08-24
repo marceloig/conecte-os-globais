@@ -50,15 +50,15 @@ function Modal({ open = false, onOpenChange, graph }: ModalProps) {
             <Dialog.Content maxWidth="450px">
                 <Dialog.Title>Fim de jogo</Dialog.Title>
                 <Flex direction="column" gap="3">
-                    <Heading size="6" className="text-yellow-400 font-bold mb-2">
+                    <Heading size="6" align="center">
                         🏆 PARABÉNS! 🏆
                     </Heading>
-                    <Badge size="3" variant="solid" color="yellow" className="bg-yellow-400 text-blue-900 font-bold">
+                    <Badge size="3" variant="solid" color="yellow">
                         <StarFilledIcon />
                         CONEXÃO ENCONTRADA!
                     </Badge>
 
-                    <Text size="4" className="text-center text-blue-100">
+                    <Text size="4" align="center">
                         Você conseguiu conectar os artistas Globais através de suas conexões!
                     </Text>
                 </Flex>
