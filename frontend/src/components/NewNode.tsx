@@ -1,6 +1,6 @@
 "use client";
 
-import { forwardRef, type ReactNode } from "react";
+import { forwardRef } from "react";
 import {
     Handle,
     Position,
@@ -10,12 +10,10 @@ import {
 import { BaseNode } from "@/components/base-node";
 import { Box } from '@radix-ui/themes';
 
-export type PlaceholderNodeProps = Partial<NodeProps> & {
-    children?: ReactNode;
-};
+export type PlaceholderNodeProps = Partial<NodeProps>;
 
 export const PlaceholderNode = forwardRef<HTMLDivElement, PlaceholderNodeProps>(
-    ({ children }, ref) => {
+    ({}, ref) => {
 
         return (
             <BaseNode style={{ cursor: 'pointer' }}

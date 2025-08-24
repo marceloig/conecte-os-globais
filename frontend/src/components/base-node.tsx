@@ -1,4 +1,3 @@
-import { cn } from "../lib/utils";
 import { forwardRef, type HTMLAttributes } from "react";
 
 export const BaseNode = forwardRef<
@@ -7,7 +6,7 @@ export const BaseNode = forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn(
+    className={[
       "relative rounded-md border bg-card text-card-foreground",
       "hover:ring-1",
       // React Flow displays node elements inside of a `NodeWrapper` component,
@@ -18,7 +17,7 @@ export const BaseNode = forwardRef<
       "[.react-flow\\_\\_node.selected_&]:border-muted-foreground",
       "[.react-flow\\_\\_node.selected_&]:shadow-lg",
       className,
-    )}
+    ].filter(Boolean).join(" ")}
     tabIndex={0}
     {...props}
   />
@@ -36,12 +35,12 @@ export const BaseNodeHeader = forwardRef<
   <header
     ref={ref}
     {...props}
-    className={cn(
+    className={[
       "mx-0 my-0 -mb-1 flex flex-row items-center justify-between gap-2 px-3 py-2",
       // Remove or modify these classes if you modify the padding in the
       // `<BaseNode />` component.
       className,
-    )}
+    ].filter(Boolean).join(" ")}
   />
 ));
 BaseNodeHeader.displayName = "BaseNodeHeader";
@@ -57,7 +56,7 @@ export const BaseNodeHeaderTitle = forwardRef<
   <h3
     ref={ref}
     data-slot="base-node-title"
-    className={cn("user-select-none flex-1 font-semibold", className)}
+    className={["user-select-none flex-1 font-semibold", className].filter(Boolean).join(" ")}
     {...props}
   />
 ));
@@ -70,7 +69,7 @@ export const BaseNodeContent = forwardRef<
   <div
     ref={ref}
     data-slot="base-node-content"
-    className={cn("flex flex-col gap-y-2 p-3", className)}
+    className={["flex flex-col gap-y-2 p-3", className].filter(Boolean).join(" ")}
     {...props}
   />
 ));
@@ -83,10 +82,10 @@ export const BaseNodeFooter = forwardRef<
   <div
     ref={ref}
     data-slot="base-node-footer"
-    className={cn(
+    className={[
       "flex flex-col items-center gap-y-2 border-t px-3 pb-3 pt-2",
       className,
-    )}
+    ].filter(Boolean).join(" ")}
     {...props}
   />
 ));
