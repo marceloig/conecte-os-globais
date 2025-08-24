@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, forwardRef, type ReactNode } from "react";
+import {forwardRef, type ReactNode } from "react";
 import {
   Handle,
   Position,

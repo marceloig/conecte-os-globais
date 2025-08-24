@@ -145,7 +145,6 @@ function App() {
               nodes={nodes}
               edges={edges}
               onNodesChange={onNodesChange}
-              onEdgesChange={onEdgesChange}
               fitView
               nodeTypes={nodeTypes}
               debug={false}
