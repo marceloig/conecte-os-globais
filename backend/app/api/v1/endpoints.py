@@ -35,8 +35,12 @@ async def list_atores_by_novela(name: str):
 
 @router.get("/atores/random", response_model=Ator)
 async def get_random_ator():
+    print("[get_random_ator] Fetching a random actor from the database")
     nome = repository.get_random_atores()
+    print(f"[get_random_ator] Random actor found: {nome}")
+    print(f"[get_random_ator] Fetching actor details from TMDB for: {nome}")
     person = await tmdb_service.search_person(nome)
+    print(f"[get_random_ator] Actor details retrieved: {person}")
     return Ator(
         id=nome,
         name=nome,
