@@ -16,7 +16,7 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import "@radix-ui/themes/styles.css";
-import { Box, Container, Flex, Heading, Button, Badge } from '@radix-ui/themes';
+import { Box, Container, Flex, Button, Badge } from '@radix-ui/themes';
 import { PlayIcon } from '@radix-ui/react-icons';
 import GraphNode from './components/GraphNode';
 import Modal from './components/Modal';
