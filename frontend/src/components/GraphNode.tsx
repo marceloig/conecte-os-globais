@@ -95,13 +95,14 @@ function GraphNode(props: any) {
                 <Box style={{ cursor: 'pointer' }}>
                     <Handle type="source" position={Position.Bottom} />
                     <Handle type="target" position={Position.Top} />
-                    <Card>
+                    <Card size="1">
                         <Flex gap="3" align="center">
                             <Avatar
-                                size="3"
+                                size="5"
                                 src={props.data.img}
                                 radius="full"
                                 fallback="T"
+                                variant='solid'
                             />
                             <Box>
                                 <Badge

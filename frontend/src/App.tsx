@@ -20,9 +20,11 @@ import { Box, Container, Flex, Heading, Button, Badge } from '@radix-ui/themes';
 import { PlayIcon } from '@radix-ui/react-icons';
 import GraphNode from './components/GraphNode';
 import Modal from './components/Modal';
+import FuzzyText from './components/FuzzyText';
 import { PlaceholderNode } from './components/NewNode';
 import { env } from "@/config/env";
 import axios from "axios";
+import './index.css'
 
 const initialNodes: Node[] = [
   {
@@ -135,20 +137,26 @@ function App() {
     <Container size="4" p="4">
       <Flex direction="column">
         <Box>
-          <Heading>Conecte os Globais</Heading>
+          <FuzzyText
+            baseIntensity={0.2}
+            hoverIntensity={0.6}
+            enableHover={true}
+          >
+            Conecte os Globais
+          </FuzzyText>
         </Box>
         <Flex justify="end">
           <Badge size="3" variant="solid" color="yellow">
-            AO VIVO
+            OFFLINE
           </Badge>
         </Flex>
 
         <Box
           width="100%"
-          height="90vh"
+          height="70vh"
         >
           <ReactFlowProvider>
-            <ReactFlow
+            <ReactFlow colorMode="dark"
               nodes={nodes}
               edges={edges}
               onNodesChange={onNodesChange}
@@ -162,7 +170,7 @@ function App() {
 
                 <Button onClick={newGame}><PlayIcon /> Novo jogo</Button>
               </Panel>
-              <Background variant={BackgroundVariant.Dots} gap={12} size={1} />
+              <Background variant={BackgroundVariant.Dots} gap={12} size={1} className="rainbow-bg-fixed" />
             </ReactFlow>
             <Modal open={openDialog} onOpenChange={setOpenDialog} graph={graph} />
           </ReactFlowProvider>

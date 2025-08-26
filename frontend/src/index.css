@@ -158,3 +158,53 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+/* ===== ADICIONE ESTE CÓDIGO NO SEU frontend/src/index.css ===== */
+
+/* Rainbow Background - CSS Puro */
+.rainbow-bg-fixed {
+  background: linear-gradient(
+    90deg,
+    #8e44ad 0%,     /* Roxo */
+    #e74c3c 14%,    /* Vermelho */
+    #f39c12 28%,    /* Laranja */
+    #f1c40f 42%,    /* Amarelo */
+    #2ecc71 56%,    /* Verde */
+    #27ae60 70%,    /* Verde escuro */
+    #3498db 84%,    /* Azul */
+    #5dade2 100%    /* Azul claro */
+  );
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+/* Versão sem fixed (caso precise) */
+.rainbow-bg {
+  background: linear-gradient(
+    90deg,
+    #8e44ad 0%,
+    #e74c3c 14%,
+    #f39c12 28%,
+    #f1c40f 42%,
+    #2ecc71 56%,
+    #27ae60 70%,
+    #3498db 84%,
+    #5dade2 100%
+  );
+}
+
+/* Versão vertical (se quiser testar) */
+.rainbow-bg-vertical {
+  background: linear-gradient(
+    180deg,
+    #8e44ad 0%,
+    #e74c3c 14%,
+    #f39c12 28%,
+    #f1c40f 42%,
+    #2ecc71 56%,
+    #27ae60 70%,
+    #3498db 84%,
+    #5dade2 100%
+  );
+  min-height: 100vh;
+}
