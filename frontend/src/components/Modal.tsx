@@ -1,7 +1,6 @@
 
-import { Flex, Text, Button, Dialog, Heading, Badge} from '@radix-ui/themes';
-import { StarFilledIcon } from '@radix-ui/react-icons';
-import { memo, useCallback } from 'react';
+import { Flex, Text, Button, Dialog, Heading} from '@radix-ui/themes';
+import { memo, useState, useCallback } from 'react';
 import { useReactFlow} from '@xyflow/react';
 
 interface Graph {
@@ -18,10 +17,11 @@ interface ModalProps {
 
 function Modal({ open = false, onOpenChange, graph }: ModalProps) {
     const { getEdges, addEdges } = useReactFlow();
+    const [path, setPath] = useState('');
 
     const handleOpenChange = useCallback((newOpen: boolean) => {
         const edges = getEdges();
-        console.log("[handleOpenChange] executing...", graph, open);
+        const connection = [];
 
         for (let index = 0; index < edges.length; index++) {
             let edge = edges[index];
@@ -41,6 +41,14 @@ function Modal({ open = false, onOpenChange, graph }: ModalProps) {
             addEdges(edge);
         }
 
+        for (let nodeIndex = 0; nodeIndex < graph?.nodes.length; nodeIndex++) {
+            const element = graph?.nodes[nodeIndex];
+            connection.push(element.name);
+            connection.push('➔');
+        }
+        connection.pop();
+
+        setPath(connection.join('\n'));
         onOpenChange?.(newOpen);
     }, [open]);
 
@@ -53,13 +61,11 @@ function Modal({ open = false, onOpenChange, graph }: ModalProps) {
                     <Heading size="6" align="center">
                         🏆 PARABÉNS! 🏆
                     </Heading>
-                    <Badge size="3" variant="solid" color="yellow">
-                        <StarFilledIcon />
-                        CONEXÃO ENCONTRADA!
-                    </Badge>
-
                     <Text size="4" align="center">
                         Você conseguiu conectar os artistas Globais através de suas conexões!
+                    </Text>
+                    <Text size="4" align="center">
+                        {path}
                     </Text>
                 </Flex>
 
