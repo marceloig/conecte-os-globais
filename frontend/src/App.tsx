@@ -16,8 +16,7 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import "@radix-ui/themes/styles.css";
-import { Box, Container, Flex, Button, Badge } from '@radix-ui/themes';
-import { PlayIcon } from '@radix-ui/react-icons';
+import { Box, Container, Flex, Badge } from '@radix-ui/themes';
 import GraphNode from './components/GraphNode';
 import Modal from './components/Modal';
 import FuzzyText from './components/FuzzyText';
@@ -65,13 +64,13 @@ function App() {
         {
           id: ator_left.name,
           data: { label: ator_left.name, type: 'ator', direction: 'left', img: ator_left.img, },
-          position: { x: -150, y: 0 },
+          position: { x: -150, y: -100 },
           type: "graphNode",
         },
         {
           id: ator_right.name,
           data: { label: ator_right.name, type: 'ator', direction: 'right', img: ator_right.img, },
-          position: { x: 150, y: 0 },
+          position: { x: 150, y: -100 },
           type: "graphNode",
         }
       ]);
@@ -141,8 +140,8 @@ function App() {
             baseIntensity={0.2}
             hoverIntensity={0.6}
             enableHover={true}
-          >
-            Conecte os Globais
+            fontSize={64}
+          >Conecte os Globais
           </FuzzyText>
         </Box>
         <Flex justify="end">
@@ -153,7 +152,7 @@ function App() {
 
         <Box
           width="100%"
-          height="70vh"
+          height="85vh"
         >
           <ReactFlowProvider>
             <ReactFlow colorMode="dark"
@@ -168,9 +167,9 @@ function App() {
               <Controls />
               <Panel position="top-center">
 
-                <Button onClick={newGame}><PlayIcon /> Novo jogo</Button>
+                <button onClick={newGame} className='tv-analog-button'>Novo jogo</button>
               </Panel>
-              <Background variant={BackgroundVariant.Dots} gap={12} size={1} className="rainbow-bg-fixed" />
+              <Background variant={BackgroundVariant.Dots} gap={12} size={1} className="tv-bars-background" />
             </ReactFlow>
             <Modal open={openDialog} onOpenChange={setOpenDialog} graph={graph} />
           </ReactFlowProvider>

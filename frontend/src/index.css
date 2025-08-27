@@ -154,6 +154,7 @@ body {
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
@@ -161,50 +162,154 @@ body {
 
 /* ===== ADICIONE ESTE CÓDIGO NO SEU frontend/src/index.css ===== */
 
-/* Rainbow Background - CSS Puro */
-.rainbow-bg-fixed {
-  background: linear-gradient(
-    90deg,
-    #8e44ad 0%,     /* Roxo */
-    #e74c3c 14%,    /* Vermelho */
-    #f39c12 28%,    /* Laranja */
-    #f1c40f 42%,    /* Amarelo */
-    #2ecc71 56%,    /* Verde */
-    #27ae60 70%,    /* Verde escuro */
-    #3498db 84%,    /* Azul */
-    #5dade2 100%    /* Azul claro */
-  );
-  background-attachment: fixed;
-  min-height: 100vh;
+.tv-bars-background {
+  height: 100vh;
+  width: 100%;
+  background: linear-gradient(to right,
+      #ffffff 0%, #ffffff 10%,
+      /* Branco */
+      #ffff00 15%, #ffff00 25%,
+      /* Amarelo */
+      #00ffff 30%, #00ffff 40%,
+      /* Ciano */
+      #00ff00 45%, #00ff00 55%,
+      /* Verde */
+      #ff00ff 60%, #ff00ff 70%,
+      /* Magenta */
+      #ff0000 75%, #ff0000 85%,
+      /* Vermelho */
+      #0000ff 90%, #0000ff 100%
+      /* Azul */
+    );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Arial', sans-serif;
+  filter: blur(2px);
 }
 
-/* Versão sem fixed (caso precise) */
-.rainbow-bg {
-  background: linear-gradient(
-    90deg,
-    #8e44ad 0%,
-    #e74c3c 14%,
-    #f39c12 28%,
-    #f1c40f 42%,
-    #2ecc71 56%,
-    #27ae60 70%,
-    #3498db 84%,
-    #5dade2 100%
-  );
+/* Botão estilo TV analógica */
+.tv-analog-button {
+  background: linear-gradient(145deg,
+      #2a2a2a 0%,
+      #4a4a4a 25%,
+      #6a6a6a 50%,
+      #4a4a4a 75%,
+      #2a2a2a 100%);
+  border: 3px solid #1a1a1a;
+  border-radius: 8px;
+  color: #ffffff;
+  font-family: 'Courier New', monospace;
+  font-size: 16px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  padding: 12px 24px;
+  cursor: pointer;
+  position: relative;
+  box-shadow:
+    0 4px 8px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+  text-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.8),
+    0 0 10px rgba(255, 255, 255, 0.3);
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  min-width: 140px;
 }
 
-/* Versão vertical (se quiser testar) */
-.rainbow-bg-vertical {
-  background: linear-gradient(
-    180deg,
-    #8e44ad 0%,
-    #e74c3c 14%,
-    #f39c12 28%,
-    #f1c40f 42%,
-    #2ecc71 56%,
-    #27ae60 70%,
-    #3498db 84%,
-    #5dade2 100%
-  );
-  min-height: 100vh;
+/* Efeito hover do botão */
+.tv-analog-button:hover {
+  background: linear-gradient(145deg,
+      #3a3a3a 0%,
+      #5a5a5a 25%,
+      #7a7a7a 50%,
+      #5a5a5a 75%,
+      #3a3a3a 100%);
+  box-shadow:
+    0 6px 12px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4);
+  text-shadow:
+    0 1px 0 rgba(0, 0, 0, 0.9),
+    0 0 15px rgba(255, 255, 255, 0.4);
+  transform: translateY(-2px);
+}
+
+/* Efeito active/pressed */
+.tv-analog-button:active {
+  background: linear-gradient(145deg,
+      #1a1a1a 0%,
+      #3a3a3a 25%,
+      #4a4a4a 50%,
+      #3a3a3a 75%,
+      #1a1a1a 100%);
+  box-shadow:
+    0 2px 4px rgba(0, 0, 0, 0.6),
+    inset 0 2px 4px rgba(0, 0, 0, 0.4);
+  transform: translateY(1px);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 1);
+}
+
+/* LED de status no botão */
+.tv-analog-button::before {
+  content: '';
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 6px;
+  height: 6px;
+  background: #00ff00;
+  border-radius: 50%;
+  box-shadow:
+    0 0 4px #00ff00,
+    0 0 8px #00ff00,
+    inset 0 1px 1px rgba(255, 255, 255, 0.3);
+  animation: led-pulse 2s ease-in-out infinite alternate;
+}
+
+/* Animação do LED */
+@keyframes led-pulse {
+  from {
+    opacity: 0.7;
+    box-shadow:
+      0 0 4px #00ff00,
+      0 0 8px #00ff00;
+  }
+
+  to {
+    opacity: 1;
+    box-shadow:
+      0 0 8px #00ff00,
+      0 0 16px #00ff00,
+      0 0 24px rgba(0, 255, 0, 0.3);
+  }
+}
+
+/* Painel de controle */
+.tv-control-panel {
+  position: fixed;
+  top: 30px;
+  left: 30px;
+  background: linear-gradient(145deg, #333, #666);
+  border: 2px solid #1a1a1a;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow:
+    0 8px 16px rgba(0, 0, 0, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  z-index: 1000;
+}
+
+.tv-control-panel::before {
+  content: 'CONTROLE';
+  position: absolute;
+  top: -8px;
+  left: 15px;
+  background: #333;
+  color: #ccc;
+  font-size: 10px;
+  font-family: 'Courier New', monospace;
+  padding: 0 8px;
+  letter-spacing: 2px;
 }

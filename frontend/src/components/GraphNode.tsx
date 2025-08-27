@@ -1,5 +1,5 @@
 
-import { Box, Card, Flex, Avatar, Text, Button, Popover, Table, ScrollArea, Badge, TextField } from '@radix-ui/themes';
+import { Box, Card, Flex, Avatar, Button, Popover, Table, ScrollArea, Badge, TextField } from '@radix-ui/themes';
 import { PlusIcon } from '@radix-ui/react-icons';
 import {
     Handle, Position, useReactFlow, useNodeId,
@@ -51,7 +51,7 @@ function GraphNode(props: any) {
                 const filter_rows = rows.filter((row: any) => {
                     return !currentNodes.some((node: Node) => node.data.label === row.data.label);
                 });
-              
+
                 setRows(filter_rows);
             } catch (error) {
                 console.error(error);
@@ -82,10 +82,11 @@ function GraphNode(props: any) {
             },
         };
         addNodes(newNode);
+        setFilterValue('');
 
     }, []);
 
-    const filteredRows = rows.filter((row: any) => 
+    const filteredRows = rows.filter((row: any) =>
         row.data.label.toLowerCase().includes(filterValue.toLowerCase())
     );
 
@@ -98,7 +99,7 @@ function GraphNode(props: any) {
                     <Card size="1">
                         <Flex gap="3" align="center">
                             <Avatar
-                                size="5"
+                                size="3"
                                 src={props.data.img}
                                 radius="full"
                                 fallback="T"
@@ -107,14 +108,11 @@ function GraphNode(props: any) {
                             <Box>
                                 <Badge
                                     size="1"
-                                    variant="outline"
-                                    color={props.data.type === 'novela' ? 'orange' : 'blue'}
+                                    variant="solid"
+                                    color={props.data.type === 'novela' ? 'orange' : 'blue'} 
                                 >
-                                    {props.data.type === 'novela' ? 'NOVELA' : 'ARTISTA'}
-                                </Badge>
-                                <Text as="div" size="2" weight="bold">
                                     {props.data.label}
-                                </Text>
+                                </Badge>
                             </Box>
                         </Flex>
                     </Card>
