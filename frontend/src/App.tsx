@@ -18,7 +18,8 @@ import '@xyflow/react/dist/style.css';
 import "@radix-ui/themes/styles.css";
 import { Box, Container, Flex, Badge } from '@radix-ui/themes';
 import GraphNode from './components/GraphNode';
-import Modal from './components/Modal';
+import ModalEndGame from './components/ModalEndGame';
+import ModalHowToPlay from './components/ModalHowToPlay';
 import FuzzyText from './components/FuzzyText';
 import { PlaceholderNode } from './components/NewNode';
 import { env } from "@/config/env";
@@ -165,13 +166,15 @@ function App() {
               debug={false}
             >
               <Controls />
+              <Panel position="top-left">
+                <ModalHowToPlay />
+              </Panel>
               <Panel position="top-center">
-
                 <button onClick={newGame} className='tv-analog-button'>Novo jogo</button>
               </Panel>
               <Background variant={BackgroundVariant.Dots} gap={12} size={1} className="tv-bars-background" />
             </ReactFlow>
-            <Modal open={openDialog} onOpenChange={setOpenDialog} graph={graph} />
+            <ModalEndGame open={openDialog} onOpenChange={setOpenDialog} graph={graph} />
           </ReactFlowProvider>
         </Box>
       </Flex>

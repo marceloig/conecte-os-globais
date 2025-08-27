@@ -15,7 +15,7 @@ interface ModalProps {
     graph?: Graph
 }
 
-function Modal({ open = false, onOpenChange, graph }: ModalProps) {
+function ModalEndGame({ open = false, onOpenChange, graph }: ModalProps) {
     const { getEdges, addEdges } = useReactFlow();
     const [path, setPath] = useState('');
 
@@ -84,4 +84,4 @@ function Modal({ open = false, onOpenChange, graph }: ModalProps) {
     );
 }
 
-export default memo(Modal);
+export default memo(ModalEndGame);
