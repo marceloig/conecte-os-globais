@@ -16,7 +16,7 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import "@radix-ui/themes/styles.css";
-import { Box, Container, Flex, Badge } from '@radix-ui/themes';
+import { Box, Container, Flex } from '@radix-ui/themes';
 import GraphNode from './components/GraphNode';
 import ModalEndGame from './components/ModalEndGame';
 import ModalHowToPlay from './components/ModalHowToPlay';
