@@ -14,7 +14,6 @@ function GraphNode(props: any) {
     const [filterValue, setFilterValue] = useState('');
     const { getNodes, addNodes, addEdges } = useReactFlow();
 
-
     const nodeId = useNodeId();
 
     useEffect(() => {
