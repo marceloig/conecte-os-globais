@@ -1,27 +1,10 @@
 
 import { Flex, Text, Button, Dialog, Heading, Strong } from '@radix-ui/themes';
-import { memo, useState, useCallback } from 'react';
+import { memo } from 'react';
 import '../index.css'
 
-interface Graph {
-    grau?: number;
-    nodes?: any;
-    found?: boolean;
-}
 
-interface ModalProps {
-    open?: boolean;
-    onOpenChange?: (open: boolean) => void;
-    graph?: Graph
-}
-
-function ModalHowToPlay({ open = false, onOpenChange }: ModalProps) {
-    const [path, setPath] = useState('');
-
-    const handleOpenChange = useCallback((newOpen: boolean) => {
-        onOpenChange?.(newOpen);
-    }, [open]);
-
+function ModalHowToPlay() {
 
     return (
         <Dialog.Root>
