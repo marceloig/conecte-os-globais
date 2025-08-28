@@ -145,12 +145,6 @@ function App() {
           >Conecte os Globais
           </FuzzyText>
         </Box>
-        <Flex justify="end">
-          <Badge size="3" variant="solid" color="yellow">
-            OFFLINE
-          </Badge>
-        </Flex>
-
         <Box
           width="100%"
           height="85vh"
