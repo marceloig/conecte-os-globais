@@ -12,7 +12,7 @@ import axios from "axios";
 function GraphNode(props: any) {
     const [rows, setRows] = useState([]);
     const [filterValue, setFilterValue] = useState('');
-    const { getNodes, addNodes, addEdges } = useReactFlow();
+    const { getNodes, addNodes, addEdges, fitView } = useReactFlow();
 
     const nodeId = useNodeId();
 
@@ -56,7 +56,8 @@ function GraphNode(props: any) {
                 console.error(error);
             }
         };
-        fetchData();
+        fetchData()
+        .then(() => fitView());
     }, [nodeId]);
 
     const addNewGraphNode = useCallback(async (sourceNode: any, row: any) => {
