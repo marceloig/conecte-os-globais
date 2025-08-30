@@ -16,7 +16,7 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import "@radix-ui/themes/styles.css";
-import { Box, Container, Flex } from '@radix-ui/themes';
+import { Box, Button, Container, Flex } from '@radix-ui/themes';
 import GraphNode from './components/GraphNode';
 import ModalEndGame from './components/ModalEndGame';
 import ModalHowToPlay from './components/ModalHowToPlay';
@@ -138,7 +138,7 @@ function App() {
   );
 
   return (
-    <Container size="4" p="4">
+    <Container size="4">
       <Flex direction="column">
         <Box>
           <FuzzyText
@@ -168,11 +168,11 @@ function App() {
                 <ModalHowToPlay />
               </Panel>
               <Panel position="top-center">
-                <button onClick={newGame} disabled={isLoadingNewGame} className='tv-analog-button'>
+                <Button onClick={newGame} loading={isLoadingNewGame} variant='classic' color='bronze'>
                   {isLoadingNewGame ? 'Carregando...' : 'Novo jogo'}
-                </button>
+                </Button>
               </Panel>
-              <Background variant={BackgroundVariant.Dots} gap={12} size={1} className="tv-bars-background" />
+              <Background variant={BackgroundVariant.Cross} gap={12} size={1} className="tv-bars-background" />
             </ReactFlow>
             <ModalEndGame open={openDialog} onOpenChange={setOpenDialog} graph={graph} />
           </ReactFlowProvider>

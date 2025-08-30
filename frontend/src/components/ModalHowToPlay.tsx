@@ -9,7 +9,7 @@ function ModalHowToPlay() {
     return (
         <Dialog.Root>
             <Dialog.Trigger>
-                <button className='tv-analog-button'>Como Jogar</button>
+                <Button variant='classic' color='bronze'>Como Jogar</Button>
             </Dialog.Trigger>
             <Dialog.Content maxWidth="450px">
                 <Dialog.Title>Como Jogar</Dialog.Title>
@@ -27,7 +27,7 @@ function ModalHowToPlay() {
 
                 <Flex gap="3" mt="4" justify="end">
                     <Dialog.Close>
-                        <Button variant="soft" color="gray">
+                        <Button variant="classic" color="gray">
                             Fechar
                         </Button>
                     </Dialog.Close>
