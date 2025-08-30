@@ -53,8 +53,10 @@ function App() {
   const [edges, setEdges] = useEdgesState(initialEdges);
   const [openDialog, setOpenDialog] = useState(false);
   const [graph, setGraph] = useState({});
+  const [isLoadingNewGame, setIsLoadingNewGame] = useState(false);
 
   const newGame = useCallback(async () => {
+    setIsLoadingNewGame(true);
     try {
       const response_1 = await axios.get(`${env.VITE_API_ENDPOINT}/api/v1/atores/random`);
       const response_2 = await axios.get(`${env.VITE_API_ENDPOINT}/api/v1/atores/random`);
@@ -81,6 +83,8 @@ function App() {
       } else {
         console.error("Unexpected error:", error);
       }
+    } finally {
+      setIsLoadingNewGame(false);
     }
   }, [setNodes]);
 
@@ -164,7 +168,9 @@ function App() {
                 <ModalHowToPlay />
               </Panel>
               <Panel position="top-center">
-                <button onClick={newGame} className='tv-analog-button'>Novo jogo</button>
+                <button onClick={newGame} disabled={isLoadingNewGame} className='tv-analog-button'>
+                  {isLoadingNewGame ? 'Carregando...' : 'Novo jogo'}
+                </button>
               </Panel>
               <Background variant={BackgroundVariant.Dots} gap={12} size={1} className="tv-bars-background" />
             </ReactFlow>
