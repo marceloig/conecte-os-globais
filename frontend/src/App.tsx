@@ -145,7 +145,7 @@ function App() {
             baseIntensity={0.2}
             hoverIntensity={0.6}
             enableHover={true}
-            fontSize={64}
+            fontSize={32}
           >Conecte os Globais
           </FuzzyText>
         </Box>
