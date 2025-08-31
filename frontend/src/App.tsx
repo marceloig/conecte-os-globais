@@ -172,7 +172,7 @@ function App() {
                   {isLoadingNewGame ? 'Carregando...' : 'Novo jogo'}
                 </Button>
               </Panel>
-              <Background variant={BackgroundVariant.Cross} gap={12} size={1} className="tv-bars-background" />
+              <Background variant={BackgroundVariant.Cross} gap={12} size={1} className="tv-background bars-only" />
             </ReactFlow>
             <ModalEndGame open={openDialog} onOpenChange={setOpenDialog} graph={graph} />
           </ReactFlowProvider>
