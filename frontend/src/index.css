@@ -107,39 +107,7 @@
   animation: tv-rgb-shift 0.3s linear infinite;
 }
 
-/* Efeito de interferência colorida adicional */
-.tv-background::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  width: inherit;
-  height: inherit;
-  
-  /* Interferência horizontal colorida ocasional */
-  background: 
-    linear-gradient(0deg, 
-      transparent 0%, 
-      rgba(255, 0, 255, 0.3) 2%,
-      rgba(0, 255, 255, 0.3) 4%,
-      rgba(255, 255, 0, 0.3) 6%,
-      transparent 8%,
-      transparent 92%,
-      rgba(255, 100, 0, 0.3) 94%,
-      rgba(100, 255, 0, 0.3) 96%,
-      rgba(0, 100, 255, 0.3) 98%,
-      transparent 100%
-    );
-  
-  pointer-events: none;
-  z-index: 2;
-  opacity: 0;
-  
-  /* Interferência que atravessa a tela horizontalmente */
-  animation: tv-color-interference 2s steps(4, end) infinite;
-}
+
 
 /* Animação principal da estática colorida */
 @keyframes tv-color-static {
@@ -207,21 +175,7 @@
   }
 }
 
-/* Interferência colorida que atravessa a tela horizontalmente */
-@keyframes tv-color-interference {
-  0%, 85%, 100% {
-    opacity: 0;
-    transform: translateY(-100%);
-  }
-  5%, 15% {
-    opacity: 0.7;
-    transform: translateY(0%);
-  }
-  10% {
-    opacity: 1;
-    transform: translateY(100%);
-  }
-}
+
 
 /* Versão mais sutil para ambientes que precisam de menos distração */
 .tv-background.subtle {
@@ -259,10 +213,7 @@
     );
 }
 
-.tv-background.subtle::after {
-  animation-duration: 4s;
-  opacity: 0.5;
-}
+
 
 /* Versão intensa para efeito mais dramático */
 .tv-background.intense {
@@ -298,9 +249,7 @@
   animation-duration: 0.1s;
 }
 
-.tv-background.intense::after {
-  animation-duration: 1s;
-}
+
 
 /* Versão apenas barras (sem estática) */
 .tv-background.bars-only {
@@ -326,8 +275,7 @@
   background-position: 15% 25%, 65% 40%, 35% 75%, 85% 15%, 45% 55%, 25% 85%, 2px 2px, 0 0;
 }
 
-.tv-background.static::before,
-.tv-background.static::after {
+.tv-background.static::before {
   animation: none;
   transform: none;
 }
