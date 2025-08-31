@@ -12,7 +12,7 @@ import axios from "axios";
 function GraphNode(props: any) {
     const [rows, setRows] = useState([]);
     const [filterValue, setFilterValue] = useState('');
-    const { getNodes, addNodes, addEdges, fitView } = useReactFlow();
+    const { getNodes, addNodes, addEdges, fitView, getIntersectingNodes } = useReactFlow();
 
     const nodeId = useNodeId();
 
@@ -41,6 +41,7 @@ function GraphNode(props: any) {
                 for (const sourceNode of sourceNodes) {
                     const newEdge: Edge = {
                         id: `${sourceNode.id}-${nodeId}`,
+                        type: 'straight',
                         source: sourceNode.id,
                         target: nodeId || '',
                         animated: false,
@@ -57,8 +58,27 @@ function GraphNode(props: any) {
             }
         };
         fetchData()
-        .then(() => fitView());
-    }, [nodeId]);
+            .then(() => {
+                const currentNode = getNodes().find(node => node.id === nodeId);
+
+                if (currentNode) {
+                    let positionX = 100;
+                    if (currentNode.data.direction === 'left') {
+                        positionX = -100;
+                    }
+                    const intersectingNodes = getIntersectingNodes(currentNode);
+                    if (intersectingNodes.length > 0) {
+                        const newPosition = {
+                            x: currentNode.position.x + positionX * intersectingNodes.length,
+                            y: currentNode.position.y
+                        };
+                        currentNode.position = newPosition;
+                        addNodes(currentNode);
+                    }
+                }
+                fitView();
+            });
+    }, [getIntersectingNodes]);
 
     const addNewGraphNode = useCallback(async (sourceNode: any, row: any) => {
 
@@ -66,6 +86,7 @@ function GraphNode(props: any) {
         if (row.data.type === 'novela') {
             url = `${env.VITE_API_ENDPOINT}/api/v1/novelas/${row.data.label}`;
         }
+        
         const response = await axios.get(url);
 
         const newNode: Node = {
@@ -79,6 +100,7 @@ function GraphNode(props: any) {
                 label: row.data.label,
                 type: row.data.type,
                 img: response.data.img,
+                direction: sourceNode.data.direction
             },
         };
         addNodes(newNode);
@@ -109,7 +131,7 @@ function GraphNode(props: any) {
                                 <Badge
                                     size="1"
                                     variant="solid"
-                                    color={props.data.type === 'novela' ? 'orange' : 'blue'} 
+                                    color={props.data.type === 'novela' ? 'orange' : 'blue'}
                                 >
                                     {props.data.label}
                                 </Badge>
