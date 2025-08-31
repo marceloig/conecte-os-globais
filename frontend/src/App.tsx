@@ -151,7 +151,7 @@ function App() {
         </Box>
         <Box
           width="100%"
-          height="85vh"
+          height="90vh"
         >
           <ReactFlowProvider>
             <ReactFlow colorMode="dark"
