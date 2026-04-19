@@ -9,7 +9,7 @@ function ModalHowToPlay() {
     return (
         <Dialog.Root>
             <Dialog.Trigger>
-                <Button variant='classic' color='bronze'>Como Jogar</Button>
+                <Button variant='classic' color='cyan'>Como Jogar</Button>
             </Dialog.Trigger>
             <Dialog.Content maxWidth="450px">
                 <Dialog.Title>Como Jogar</Dialog.Title>

@@ -18,7 +18,7 @@ export const PlaceholderNode = forwardRef<HTMLDivElement, PlaceholderNodeProps>(
         return (
             <BaseNode style={{ cursor: 'pointer' }}
                 ref={ref}
-                className="w-[150px] border-dashed border-gray-400 bg-card text-center"
+                className="w-[150px] border-dashed border-white/40 bg-black/80 text-center text-white"
             >
                 <Box>+</Box>
                 <Handle

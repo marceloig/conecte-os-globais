@@ -118,7 +118,7 @@ function GraphNode(props: any) {
                 <Box style={{ cursor: 'pointer' }}>
                     <Handle type="source" position={Position.Bottom} />
                     <Handle type="target" position={Position.Top} />
-                    <Card size="1">
+                    <Card size="1" style={{ background: 'rgba(0, 0, 0, 0.85)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
                         <Flex gap="3" align="center">
                             <Avatar
                                 size="3"

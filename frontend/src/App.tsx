@@ -6,8 +6,6 @@ import {
   applyNodeChanges,
   applyEdgeChanges,
   Controls,
-  Background,
-  BackgroundVariant,
   Panel,
   ReactFlowProvider,
   type Node,
@@ -21,6 +19,7 @@ import GraphNode from './components/GraphNode';
 import ModalEndGame from './components/ModalEndGame';
 import ModalHowToPlay from './components/ModalHowToPlay';
 import FuzzyText from './components/FuzzyText';
+import TvStaticBackground from './components/TvStaticBackground';
 import { PlaceholderNode } from './components/NewNode';
 import { env } from "@/config/env";
 import axios from "axios";
@@ -154,26 +153,29 @@ function App() {
           height="90vh"
         >
           <ReactFlowProvider>
-            <ReactFlow colorMode="dark"
-              nodes={nodes}
-              edges={edges}
-              onNodesChange={onNodesChange}
-              onEdgesChange={onEdgesChange}
-              fitView
-              nodeTypes={nodeTypes}
-              debug={false}
-            >
-              <Controls />
-              <Panel position="top-left">
-                <ModalHowToPlay />
-              </Panel>
-              <Panel position="top-center">
-                <Button onClick={newGame} loading={isLoadingNewGame} variant='classic' color='bronze'>
-                  {isLoadingNewGame ? 'Carregando...' : 'Novo jogo'}
-                </Button>
-              </Panel>
-              <Background variant={BackgroundVariant.Cross} gap={12} size={1} className="tv-background bars-only static" />
-            </ReactFlow>
+            <div className="tv-screen-wrapper">
+              <TvStaticBackground />
+              <div className="tv-scanlines" />
+              <ReactFlow colorMode="dark"
+                nodes={nodes}
+                edges={edges}
+                onNodesChange={onNodesChange}
+                onEdgesChange={onEdgesChange}
+                fitView
+                nodeTypes={nodeTypes}
+                debug={false}
+              >
+                <Controls />
+                <Panel position="top-left">
+                  <ModalHowToPlay />
+                </Panel>
+                <Panel position="top-center">
+                  <Button onClick={newGame} loading={isLoadingNewGame} variant='classic' color='amber'>
+                    {isLoadingNewGame ? 'Carregando...' : 'Novo jogo'}
+                  </Button>
+                </Panel>
+              </ReactFlow>
+            </div>
             <ModalEndGame open={openDialog} onOpenChange={setOpenDialog} graph={graph} />
           </ReactFlowProvider>
         </Box>
