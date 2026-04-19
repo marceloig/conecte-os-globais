@@ -2,6 +2,7 @@
 import { Flex, Text, Button, Dialog, Heading} from '@radix-ui/themes';
 import { memo, useState, useCallback } from 'react';
 import { useReactFlow} from '@xyflow/react';
+import { shareResult } from '../lib/share';
 
 interface Graph {
     grau?: number;
@@ -18,6 +19,21 @@ interface ModalProps {
 function ModalEndGame({ open = false, onOpenChange, graph }: ModalProps) {
     const { getEdges, addEdges } = useReactFlow();
     const [path, setPath] = useState('');
+    const [isSharing, setIsSharing] = useState(false);
+    const [copyFeedback, setCopyFeedback] = useState(false);
+
+    const handleShare = useCallback(async () => {
+        setIsSharing(true);
+        try {
+            const result = await shareResult(graph!.nodes);
+            if (result.status === "copied") {
+                setCopyFeedback(true);
+                setTimeout(() => setCopyFeedback(false), 2000);
+            }
+        } finally {
+            setIsSharing(false);
+        }
+    }, [graph]);
 
     const handleOpenChange = useCallback((newOpen: boolean) => {
         const edges = getEdges();
@@ -75,9 +91,11 @@ function ModalEndGame({ open = false, onOpenChange, graph }: ModalProps) {
                             Fechar
                         </Button>
                     </Dialog.Close>
-                    {/* <Dialog.Close>
-                        <Button>Compartilhar</Button>
-                    </Dialog.Close> */}
+                    {graph?.found === true && graph?.nodes?.length >= 3 && (
+                        <Button onClick={handleShare} disabled={isSharing}>
+                            {copyFeedback ? "Copiado!" : "Compartilhar"}
+                        </Button>
+                    )}
                 </Flex>
             </Dialog.Content>
         </Dialog.Root>
