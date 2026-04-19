@@ -163,6 +163,10 @@ function App() {
                 onEdgesChange={onEdgesChange}
                 fitView
                 nodeTypes={nodeTypes}
+                defaultEdgeOptions={{
+                  style: { stroke: '#facc15', strokeWidth: 3 },
+                  animated: true,
+                }}
                 debug={false}
               >
                 <Controls />
