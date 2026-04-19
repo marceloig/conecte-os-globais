@@ -1,10 +1,14 @@
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import computed_field
 from typing import Optional
-from os import getenv
-from dotenv import load_dotenv
 
-load_dotenv()
+
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        extra="ignore",
+    )
+
     app_name: str = "Conecte os Globais API"
     version: str = "1.0.0"
     debug: bool = False
@@ -19,10 +23,12 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int = 30
     
     # CORS
-    backend_cors_origins: list[str] = [getenv("FRONTEND_URL", "http://localhost:5173")]
-    
-    class Config:
-        env_file = ".env"
+    frontend_url: str = "http://localhost:5173"
+
+    @computed_field
+    @property
+    def backend_cors_origins(self) -> list[str]:
+        return [self.frontend_url]
 
 
 settings = Settings()
