@@ -7,8 +7,7 @@ import {
     type NodeProps,
 } from "@xyflow/react";
 
-import { BaseNode } from "@/components/base-node";
-import { Box } from '@radix-ui/themes';
+import { Box, Flex } from '@radix-ui/themes';
 
 export type PlaceholderNodeProps = Partial<NodeProps>;
 
@@ -16,11 +15,25 @@ export const PlaceholderNode = forwardRef<HTMLDivElement, PlaceholderNodeProps>(
     ({}, ref) => {
 
         return (
-            <BaseNode style={{ cursor: 'pointer' }}
-                ref={ref}
-                className="w-[150px] border-dashed border-white/40 bg-black/80 text-center text-white"
-            >
-                <Box>+</Box>
+            <Box ref={ref} style={{ cursor: 'pointer' }}>
+                <Flex direction="column" align="center" gap="1">
+                    <Box
+                        style={{
+                            width: 72,
+                            height: 72,
+                            borderRadius: '50%',
+                            background: 'rgba(0, 0, 0, 0.8)',
+                            border: '2px dashed rgba(255, 255, 255, 0.4)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: 'white',
+                            fontSize: 24,
+                        }}
+                    >
+                        +
+                    </Box>
+                </Flex>
                 <Handle
                     type="target"
                     style={{ visibility: "hidden" }}
@@ -33,7 +46,7 @@ export const PlaceholderNode = forwardRef<HTMLDivElement, PlaceholderNodeProps>(
                     position={Position.Bottom}
                     isConnectable={false}
                 />
-            </BaseNode>
+            </Box>
         );
     },
 );

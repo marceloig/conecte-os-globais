@@ -1,5 +1,5 @@
 
-import { Box, Card, Flex, Avatar, Button, Popover, Table, ScrollArea, Badge, TextField } from '@radix-ui/themes';
+import { Box, Flex, Avatar, Button, Popover, Table, ScrollArea, Badge, TextField } from '@radix-ui/themes';
 import { PlusIcon } from '@radix-ui/react-icons';
 import {
     Handle, Position, useReactFlow, useNodeId,
@@ -112,32 +112,46 @@ function GraphNode(props: any) {
         row.data.label.toLowerCase().includes(filterValue.toLowerCase())
     );
 
+    const borderColor = props.data.type === 'novela' ? '#f97316' : '#3b82f6';
+
     return (
         <Popover.Root>
             <Popover.Trigger>
                 <Box style={{ cursor: 'pointer' }}>
                     <Handle type="source" position={Position.Bottom} />
                     <Handle type="target" position={Position.Top} />
-                    <Card size="1" style={{ background: 'rgba(0, 0, 0, 0.85)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
-                        <Flex gap="3" align="center">
+                    <Flex direction="column" align="center" gap="1">
+                        <Box
+                            style={{
+                                width: 72,
+                                height: 72,
+                                borderRadius: '50%',
+                                background: 'rgba(0, 0, 0, 0.85)',
+                                border: `3px solid ${borderColor}`,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                overflow: 'hidden',
+                                boxShadow: `0 0 12px ${borderColor}44`,
+                            }}
+                        >
                             <Avatar
-                                size="3"
+                                size="4"
                                 src={props.data.img}
                                 radius="full"
                                 fallback="T"
                                 variant='solid'
                             />
-                            <Box>
-                                <Badge
-                                    size="1"
-                                    variant="solid"
-                                    color={props.data.type === 'novela' ? 'orange' : 'blue'}
-                                >
-                                    {props.data.label}
-                                </Badge>
-                            </Box>
-                        </Flex>
-                    </Card>
+                        </Box>
+                        <Badge
+                            size="1"
+                            variant="solid"
+                            color={props.data.type === 'novela' ? 'orange' : 'blue'}
+                            style={{ maxWidth: 120, textAlign: 'center' }}
+                        >
+                            {props.data.label}
+                        </Badge>
+                    </Flex>
                 </Box>
             </Popover.Trigger>
 
