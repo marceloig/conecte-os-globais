@@ -24,11 +24,19 @@ class Settings(BaseSettings):
     
     # CORS
     frontend_url: str = "http://localhost:5173"
+    cors_origins: str = ""
 
     @computed_field
     @property
     def backend_cors_origins(self) -> list[str]:
-        return [self.frontend_url]
+        origins = [self.frontend_url]
+        if self.cors_origins:
+            origins.extend(
+                origin.strip()
+                for origin in self.cors_origins.split(",")
+                if origin.strip()
+            )
+        return origins
 
 
 settings = Settings()

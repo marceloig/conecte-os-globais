@@ -39,7 +39,8 @@ backend/app/
 - External API calls go in service classes under `api/service.py`
 - Use `async def` for endpoint handlers
 - Use `httpx.AsyncClient` for external HTTP calls (not `requests`)
-- CORS origins come from `FRONTEND_URL` env var
+- CORS origins come from `FRONTEND_URL` and `CORS_ORIGINS` env vars
+- `CORS_ORIGINS` supports comma-separated multiple origins
 - Never hardcode secrets — use environment variables via `dotenv`
 
 ## Neo4j Query Patterns
@@ -73,3 +74,12 @@ docker-compose up --build
 # Tests
 pytest -v
 ```
+
+## Production Deployment (AWS ECS)
+
+- Backend runs on **AWS ECS (Fargate)** behind an API Gateway
+- Docker image is built from `backend/Dockerfile` and pushed to ECR
+- Environment variables (`NEO4J_URI`, `TMDB_API_TOKEN`, `FRONTEND_URL`, `CORS_ORIGINS`, etc.) are set in the ECS task definition
+- Neo4j runs on a separate EC2 instance, accessed via private networking
+- `CORS_ORIGINS` must include the production frontend URL (e.g., `https://conecteosglobais.igormarcelo.dev.br`)
+- Health check endpoint: `GET /api/v1/health`

@@ -143,3 +143,5 @@ Frontend                    Backend                     Neo4j
 4. **TMDB API**: Utilizada para enriquecer a experiência visual com fotos reais dos atores e posters das novelas, sem necessidade de armazenar imagens localmente.
 
 5. **Separação Frontend/Backend**: Arquitetura desacoplada permite desenvolvimento independente e deploy separado de cada camada.
+
+6. **AWS ECS (Fargate)**: Backend roda em containers gerenciados pelo ECS com Fargate, eliminando a necessidade de gerenciar servidores. A imagem Docker é armazenada no ECR e o API Gateway roteia o tráfego externo para o serviço ECS.

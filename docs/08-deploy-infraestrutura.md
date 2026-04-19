@@ -105,6 +105,7 @@ FRONTEND_URL="http://localhost:5173"
 | `NEO4J_AUTH_PASSWORD` | Sim | Senha do Neo4j |
 | `TMDB_API_TOKEN` | Sim | Token Bearer da API do TMDB |
 | `FRONTEND_URL` | Não | URL do frontend para CORS (padrão: `http://localhost:5173`) |
+| `CORS_ORIGINS` | Não | URLs adicionais para CORS, separadas por vírgula (ex: `https://conecteosglobais.igormarcelo.dev.br`) |
 
 ### Frontend (`.env`)
 
@@ -119,6 +120,41 @@ VITE_API_ENDPOINT=http://localhost:8000
 > Variáveis prefixadas com `VITE_` são expostas ao código do frontend pelo Vite.
 
 ## Infraestrutura AWS
+
+### Backend em ECS (Fargate)
+
+O backend FastAPI roda em **AWS ECS com Fargate**, containerizado via Docker.
+
+#### Fluxo de Deploy
+
+1. Build da imagem Docker a partir de `backend/Dockerfile`
+2. Push da imagem para **Amazon ECR**
+3. ECS Task Definition referencia a imagem do ECR
+4. ECS Service mantém o container rodando no Fargate
+5. API Gateway roteia requisições externas para o ECS Service
+
+#### Variáveis de Ambiente no ECS
+
+As variáveis de ambiente são configuradas na **Task Definition** do ECS:
+
+| Variável | Valor em Produção |
+|----------|-------------------|
+| `NEO4J_URI` | `neo4j://<ip-privado-ec2>:7687` |
+| `NEO4J_AUTH_USER` | Usuário do Neo4j |
+| `NEO4J_AUTH_PASSWORD` | Senha do Neo4j |
+| `TMDB_API_TOKEN` | Token da API TMDB |
+| `FRONTEND_URL` | `https://conecteosglobais.igormarcelo.dev.br` |
+| `CORS_ORIGINS` | `https://conecteosglobais.igormarcelo.dev.br` |
+
+> Para segredos sensíveis, use **AWS Secrets Manager** ou **SSM Parameter Store** referenciados na Task Definition.
+
+#### CORS em Produção
+
+A variável `CORS_ORIGINS` aceita múltiplas origens separadas por vírgula. Ela é combinada com `FRONTEND_URL` para formar a lista completa de origens permitidas.
+
+```env
+CORS_ORIGINS=https://conecteosglobais.igormarcelo.dev.br,https://outro-dominio.com
+```
 
 ### Neo4j em EC2
 
@@ -159,6 +195,8 @@ Após executar, o Neo4j estará acessível em `neo4j://localhost:56789`.
 
 ## Diagrama de Deploy
 
+### Desenvolvimento Local
+
 ```
 ┌─────────────────────────────────────────────┐
 │              Máquina Local                   │
@@ -175,9 +213,11 @@ Após executar, o Neo4j estará acessível em `neo4j://localhost:56789`.
 │              │  (externo)   │               │
 │              └──────────────┘               │
 └─────────────────────────────────────────────┘
+```
 
-         ── OU (Neo4j remoto) ──
+### Desenvolvimento com Neo4j Remoto (SSM)
 
+```
 ┌─────────────────────────────────────────────┐
 │              Máquina Local                   │
 │                                             │
@@ -194,4 +234,32 @@ Após executar, o Neo4j estará acessível em `neo4j://localhost:56789`.
                     │  AWS EC2         │
                     │  Neo4j :7687     │
                     └──────────────────┘
+```
+
+### Produção (AWS)
+
+```
+┌──────────────────────────────────────────────────────────────┐
+│                         AWS Cloud                             │
+│                                                              │
+│  ┌─────────────────┐    ┌──────────────────────────────────┐ │
+│  │  API Gateway     │    │  ECS Fargate                     │ │
+│  │  (HTTPS)         │───▶│  Backend FastAPI :8000            │ │
+│  │                  │    │  (Docker container from ECR)      │ │
+│  └─────────────────┘    └──────────┬───────────┬───────────┘ │
+│                                    │           │             │
+│                         ┌──────────▼──┐  ┌─────▼──────────┐ │
+│                         │  EC2        │  │  TMDB API      │ │
+│                         │  Neo4j :7687│  │  (externo)     │ │
+│                         └─────────────┘  └────────────────┘ │
+│                                                              │
+└──────────────────────────────────────────────────────────────┘
+                         ▲
+                         │ HTTPS
+          ┌──────────────┴──────────────┐
+          │  Frontend (hospedagem       │
+          │  estática / CDN)            │
+          │  conecteosglobais.          │
+          │  igormarcelo.dev.br         │
+          └─────────────────────────────┘
 ```
