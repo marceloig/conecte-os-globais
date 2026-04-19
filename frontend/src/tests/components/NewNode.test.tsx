@@ -15,7 +15,6 @@ describe("PlaceholderNode (NewNode)", () => {
 
   it("renders with a circular dashed border style", () => {
     const { container } = renderInFlow(<PlaceholderNode />);
-    const circle = container.querySelector("div[style]") as HTMLElement;
 
     // The outermost styled div should have the dashed border
     const styledDivs = container.querySelectorAll("div[style]");
