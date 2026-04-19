@@ -1,6 +1,7 @@
 ---
 inclusion: fileMatch
 fileMatchPattern: "backend/**"
+description: "Backend conventions, Neo4j patterns, error handling, and deployment standards"
 ---
 
 # Backend Development Standards

@@ -1,5 +1,6 @@
 ---
 inclusion: auto
+description: "Project context, architecture, and mandatory testing standards for Conecte os Globais"
 ---
 
 # Conecte os Globais — Project Context
