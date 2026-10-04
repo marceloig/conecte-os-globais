@@ -4,14 +4,15 @@
 
 | Ferramenta | Versão Mínima | Uso |
 |------------|---------------|-----|
-| Node.js | 18+ | Frontend |
+| Node.js | 20+ | Frontend |
 | npm | 9+ | Gerenciador de pacotes frontend |
-| Python | 3.11+ | Backend |
+| Python | 3.11+ | Backend + script de build do grafo |
 | pip | 23+ | Gerenciador de pacotes Python |
 | Docker | 24+ | Containerização (opcional) |
 | Docker Compose | 2.0+ | Orquestração (opcional) |
-| Neo4j | 5.x | Banco de dados de grafos |
-| AWS CLI | 2.x | Conexão remota com Neo4j (opcional) |
+
+> Não é necessário Neo4j: o grafo é um dataset estático servido pelo Cytoscape no
+> frontend. O backend só precisa de um `TMDB_API_TOKEN`.
 
 ## Setup Local
 
@@ -25,177 +26,100 @@ cd conecte-os-globais
 ### 2. Backend
 
 ```bash
-# Entrar no diretório
 cd backend
-
-# Criar ambiente virtual
 python -m venv venv
-source venv/bin/activate  # macOS/Linux
-# venv\Scripts\activate   # Windows
-
-# Instalar dependências
+source venv/bin/activate   # macOS/Linux   (Windows: venv\Scripts\activate)
 pip install -r requirements.txt
-
-# Configurar variáveis de ambiente
-cp .env.example .env
-# Editar .env com suas credenciais
-```
-
-**Variáveis obrigatórias no `.env`:**
-- `NEO4J_URI` — URI do banco Neo4j
-- `NEO4J_AUTH_USER` — Usuário Neo4j
-- `NEO4J_AUTH_PASSWORD` — Senha Neo4j
-- `TMDB_API_TOKEN` — Token da API TMDB ([obter aqui](https://www.themoviedb.org/settings/api))
-
-```bash
-# Iniciar o servidor
+cp .env.example .env       # editar com o TMDB_API_TOKEN
 uvicorn app.main:app --reload --port 8000
 ```
 
-O backend estará disponível em `http://localhost:8000`.
+**Variáveis obrigatórias no `.env`:**
+- `TMDB_API_TOKEN` — token da API TMDB ([obter aqui](https://www.themoviedb.org/settings/api))
+- `FRONTEND_URL` — origem do frontend para CORS (padrão `http://localhost:5173`)
+
+O backend estará em `http://localhost:8000`.
 
 ### 3. Frontend
 
 ```bash
-# Entrar no diretório
 cd frontend
-
-# Instalar dependências
 npm install
-
-# Configurar variáveis de ambiente
-# Criar/editar .env com:
+npm run build:graph        # gera src/data/graph.json a partir dos CSVs em ../neo4j
 echo "VITE_API_ENDPOINT=http://localhost:8000" > .env
-```
-
-```bash
-# Iniciar o servidor de desenvolvimento
 npm run dev
 ```
 
-O frontend estará disponível em `http://localhost:5173`.
-
-### 4. Neo4j (via Docker)
-
-```bash
-cd backend
-docker-compose up db
-```
-
-Ou, se preferir rodar apenas o Neo4j:
-
-```bash
-docker run -d \
-  --name neo4j \
-  -p 7474:7474 \
-  -p 7687:7687 \
-  -e NEO4J_AUTH=neo4j/password \
-  -v neo4j_data:/data \
-  neo4j:2025.07.0
-```
-
-Acesse o Neo4j Browser em `http://localhost:7474`.
-
-### 5. Importar Dados no Neo4j
-
-Os arquivos CSV em `neo4j/` precisam ser importados no banco. Consulte a documentação do Neo4j para importação via `LOAD CSV` ou ferramentas como `neo4j-admin import`.
+O frontend estará em `http://localhost:5173` (use essa origem — é a permitida pelo
+CORS do backend por padrão). O backend só é necessário para as **imagens**; toda a
+lógica de grafo roda offline.
 
 ## Comandos Úteis
 
 ### Backend
 
 ```bash
-# Iniciar servidor com hot reload
-uvicorn app.main:app --reload --port 8000
-
-# Rodar testes
-pytest
-
-# Rodar testes com verbose
-pytest -v
-
-# Verificar formatação
-# (instalar: pip install ruff)
-ruff check .
+uvicorn app.main:app --reload --port 8000   # servidor com hot reload
+pytest                                       # testes
+pytest -v                                    # testes verbose
 ```
 
 ### Frontend
 
 ```bash
-# Servidor de desenvolvimento
-npm run dev
-
-# Build de produção
-npm run build
-
-# Preview do build
-npm run preview
-
-# Lint
-npm run lint
+npm run dev           # servidor de desenvolvimento
+npm run build:graph   # regenera o dataset do grafo (se os CSVs mudaram)
+npm run build         # typecheck + build de produção
+npm run preview       # preview do build
+npm test              # vitest
+npm run lint          # eslint
 ```
 
 ### Docker
 
 ```bash
-# Subir tudo
-docker-compose up --build
-
-# Subir em background
-docker-compose up -d --build
-
-# Parar
-docker-compose down
-
-# Rebuild apenas o backend
-docker-compose build api
-
-# Logs do backend
-docker-compose logs -f api
-
-# Logs do Neo4j
-docker-compose logs -f db
+docker-compose up --build       # subir backend
+docker-compose up -d --build    # background
+docker-compose down             # parar
+docker-compose logs -f api      # logs
 ```
 
 ### Scrapy
 
 ```bash
 cd scrapy/memoriaglobo
-
-# Executar spider (JSON)
 scrapy crawl novelas -O novelas.json
-
-# Executar spider (CSV)
 scrapy crawl novelas -O novelas.csv
-
-# Executar com log detalhado
-scrapy crawl novelas -O novelas.json --loglevel=DEBUG
 ```
 
 ## Fluxo de Trabalho
 
-### Adicionando um Novo Endpoint
+### Adicionando uma nova consulta de grafo
 
-1. Definir o modelo Pydantic em `backend/app/models.py`
-2. Adicionar a query Cypher em `backend/app/db/neo4j.py`
-3. Criar o handler em `backend/app/api/v1/endpoints.py`
-4. Testar via Swagger UI (`http://localhost:8000/docs`)
+1. Implementar a função em `frontend/src/lib/graph.ts` (usando a instância
+   Cytoscape headless — `getFullGraph()`).
+2. Adicionar um teste em `frontend/src/tests/lib/graph.test.ts`.
+3. Consumir a função no `GameBoard.tsx` / `App.tsx`.
 
-### Adicionando um Novo Componente React
+### Adicionando um novo endpoint no backend
 
-1. Criar o componente em `frontend/src/components/`
-2. Se for um nó do ReactFlow, registrar em `nodeTypes` no `App.tsx`
-3. Importar e usar no componente pai
+1. Definir/ajustar o modelo Pydantic em `backend/app/models.py`.
+2. Criar o handler em `backend/app/api/v1/endpoints.py` (usando o `TMDBService`
+   quando precisar de imagens).
+3. Testar via Swagger UI (`http://localhost:8000/docs`).
 
-### Atualizando Dados do Neo4j
+### Adicionando um novo componente React
 
-1. Executar o spider Scrapy para coletar dados atualizados
-2. Processar os dados para o formato CSV do Neo4j
-3. Importar os CSVs no banco
+1. Criar o componente em `frontend/src/components/`.
+2. Importar e usar no componente pai (ex.: `App.tsx` ou `GameBoard.tsx`).
+
+### Atualizando os dados do grafo
+
+1. Executar o spider Scrapy para coletar dados atualizados.
+2. Processar/atualizar os CSVs em `neo4j/`.
+3. Rodar `npm run build:graph` para regenerar `frontend/src/data/graph.json`.
 
 ## Estrutura de Branches
-
-Recomendação para organização de branches:
 
 ```
 main            ← Produção
@@ -207,21 +131,13 @@ main            ← Produção
 
 ## Obtendo Token TMDB
 
-1. Criar conta em [themoviedb.org](https://www.themoviedb.org/)
-2. Acessar **Settings → API**
-3. Solicitar uma API key
-4. Copiar o **API Read Access Token** (Bearer token)
-5. Adicionar ao `.env` como `TMDB_API_TOKEN`
+1. Criar conta em [themoviedb.org](https://www.themoviedb.org/).
+2. Acessar **Settings → API**.
+3. Solicitar uma API key.
+4. Copiar o **API Read Access Token** (Bearer token).
+5. Adicionar ao `.env` como `TMDB_API_TOKEN`.
 
 ## Troubleshooting
-
-### Erro de conexão com Neo4j
-
-```
-ServiceUnavailable: Unable to retrieve routing information
-```
-
-**Solução:** Verificar se o Neo4j está rodando e se as credenciais no `.env` estão corretas. Se usando AWS SSM, verificar se o túnel está ativo.
 
 ### Erro CORS no frontend
 
@@ -229,17 +145,25 @@ ServiceUnavailable: Unable to retrieve routing information
 Access to XMLHttpRequest has been blocked by CORS policy
 ```
 
-**Solução:** Verificar se `FRONTEND_URL` no `.env` do backend corresponde à URL do frontend (incluindo porta).
+**Solução:** rode o frontend em `http://localhost:5173` (origem permitida por
+`FRONTEND_URL`) ou adicione sua origem a `CORS_ORIGINS` no `.env` do backend.
+Reinicie o backend após alterar.
 
 ### Imagens não carregam (TMDB)
 
-**Solução:** Verificar se `TMDB_API_TOKEN` está configurado corretamente. Testar o token diretamente:
+**Solução:** verificar o `TMDB_API_TOKEN`. Testar diretamente:
 
 ```bash
 curl -H "Authorization: Bearer SEU_TOKEN" \
   "https://api.themoviedb.org/3/search/person?query=Fernanda+Montenegro&language=pt-BR"
 ```
 
+### Board vazio / grafo não carrega
+
+**Solução:** confirmar que `frontend/src/data/graph.json` existe. Se faltar, rode
+`npm run build:graph` (precisa dos CSVs em `neo4j/`).
+
 ### Frontend não conecta ao backend
 
-**Solução:** Verificar se `VITE_API_ENDPOINT` no `.env` do frontend aponta para a URL correta do backend. Reiniciar o Vite após alterar variáveis de ambiente.
+**Solução:** verificar `VITE_API_ENDPOINT` no `.env` do frontend e reiniciar o
+Vite após alterar variáveis de ambiente.

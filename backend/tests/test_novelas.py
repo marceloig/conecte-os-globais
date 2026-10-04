@@ -1,29 +1,8 @@
-"""Tests for novela-related endpoints."""
+"""Tests for novela-related endpoints (TMDB image lookup only).
 
-
-def test_list_atores_by_novela(client, mock_repository):
-    mock_repository.list_atores_by_novela.return_value = [
-        "Fernanda Montenegro",
-        "Tony Ramos",
-    ]
-
-    response = client.get("/api/v1/novelas/Avenida Brasil/atores")
-
-    assert response.status_code == 200
-    data = response.json()
-    assert len(data) == 2
-    assert data[0]["name"] == "Fernanda Montenegro"
-    assert data[1]["name"] == "Tony Ramos"
-    mock_repository.list_atores_by_novela.assert_called_once_with("Avenida Brasil")
-
-
-def test_list_atores_by_novela_empty(client, mock_repository):
-    mock_repository.list_atores_by_novela.return_value = []
-
-    response = client.get("/api/v1/novelas/Novela Inexistente/atores")
-
-    assert response.status_code == 200
-    assert response.json() == []
+A rota /novelas/{name}/atores foi removida: a lógica de grafo agora vive no
+frontend (Cytoscape), não no backend.
+"""
 
 
 def test_search_novela(client, mock_tmdb_service):
@@ -49,14 +28,12 @@ def test_search_novela_no_poster(client, mock_tmdb_service):
     assert data["name"] == "Novela Sem Poster"
 
 
-def test_list_atores_response_schema(client, mock_repository):
-    mock_repository.list_atores_by_novela.return_value = ["Ator A"]
+def test_novela_response_schema(client, mock_tmdb_service):
+    mock_tmdb_service.search_tv_shows.return_value = {"poster_path": "/p.jpg"}
 
-    response = client.get("/api/v1/novelas/Test/atores")
-    data = response.json()
+    response = client.get("/api/v1/novelas/Test")
+    item = response.json()
 
-    assert len(data) == 1
-    item = data[0]
     assert "id" in item
     assert "name" in item
     assert item["id"] == item["name"]
