@@ -1,5 +1,9 @@
 # 07 — API Reference
 
+O backend é **só-TMDB**: expõe apenas as rotas de imagem e o health check. As
+consultas de grafo (ator aleatório, conexões, caminho mais curto) são feitas no
+frontend e **não** têm endpoint.
+
 ## Base URL
 
 ```
@@ -20,8 +24,6 @@ http://localhost:8000/api/v1
 
 #### `GET /api/v1/health`
 
-Verifica o status da API.
-
 **Response** `200 OK`
 
 ```json
@@ -33,32 +35,11 @@ Verifica o status da API.
 
 ---
 
-### Atores
-
-#### `GET /api/v1/atores/random`
-
-Retorna um ator aleatório do banco de dados, com imagem do TMDB.
-
-**Response** `200 OK`
-
-```json
-{
-  "id": "Fernanda Montenegro",
-  "name": "Fernanda Montenegro",
-  "img": "https://image.tmdb.org/t/p/original/path_to_image.jpg"
-}
-```
-
-**Fluxo interno:**
-1. Busca ator aleatório no Neo4j (`get_random_atores()`)
-2. Busca imagem de perfil na API do TMDB (`search_person()`)
-3. Retorna dados combinados
-
----
+### Imagens (TMDB)
 
 #### `GET /api/v1/atores/{name}`
 
-Retorna detalhes de um ator específico com imagem do TMDB.
+Retorna o nome do ator com a URL da imagem de perfil buscada no TMDB.
 
 **Parâmetros de Path:**
 
@@ -78,42 +59,9 @@ Retorna detalhes de um ator específico com imagem do TMDB.
 
 ---
 
-#### `GET /api/v1/atores/{name}/novelas`
-
-Lista todas as novelas em que um ator participou.
-
-**Parâmetros de Path:**
-
-| Parâmetro | Tipo | Descrição |
-|-----------|------|-----------|
-| `name` | string | Nome do ator |
-
-**Response** `200 OK`
-
-```json
-[
-  {
-    "id": "Cabocla - 2ª versão",
-    "name": "Cabocla - 2ª versão",
-    "img": ""
-  },
-  {
-    "id": "Cambalacho",
-    "name": "Cambalacho",
-    "img": ""
-  }
-]
-```
-
-> Nota: O campo `img` não é preenchido neste endpoint (retorna string vazia). As imagens são buscadas sob demanda pelo frontend via `GET /novelas/{name}`.
-
----
-
-### Novelas
-
 #### `GET /api/v1/novelas/{name}`
 
-Retorna detalhes de uma novela específica com poster do TMDB.
+Retorna o nome da novela com a URL do poster buscado no TMDB.
 
 **Parâmetros de Path:**
 
@@ -133,96 +81,21 @@ Retorna detalhes de uma novela específica com poster do TMDB.
 
 ---
 
-#### `GET /api/v1/novelas/{name}/atores`
+## O que mudou (consultas de grafo)
 
-Lista todos os atores que participaram de uma novela.
+As rotas abaixo **não existem mais** — a lógica migrou para o frontend
+(`src/lib/graph.ts`, Cytoscape headless):
 
-**Parâmetros de Path:**
-
-| Parâmetro | Tipo | Descrição |
-|-----------|------|-----------|
-| `name` | string | Nome da novela |
-
-**Response** `200 OK`
-
-```json
-[
-  {
-    "id": "Afrânio Gama",
-    "name": "Afrânio Gama",
-    "img": ""
-  },
-  {
-    "id": "Aisha Jambo",
-    "name": "Aisha Jambo",
-    "img": ""
-  }
-]
-```
+| Antes (backend/Neo4j) | Agora (frontend/Cytoscape) |
+|---|---|
+| `GET /atores/random` | `getRandomAtor()` |
+| `GET /atores/{name}/novelas` | `listNovelasByAtor(name)` |
+| `GET /novelas/{name}/atores` | `listAtoresByNovela(name)` |
+| `POST /graph/shortest_path` | `findFilterShortestPath(iniciais, jogados)` → `cy.aStar()` |
 
 ---
 
-### Grafo / Jogo
-
-#### `POST /api/v1/graph/shortest_path`
-
-Verifica se existe um caminho válido entre os dois atores iniciais, passando apenas pelos nós que o jogador adicionou ao grafo.
-
-**Request Body:**
-
-```json
-{
-  "initial_nodes": [
-    { "type": "ator", "name": "Fernanda Montenegro" },
-    { "type": "ator", "name": "Tony Ramos" }
-  ],
-  "nodes": [
-    { "type": "ator", "name": "Fernanda Montenegro" },
-    { "type": "ator", "name": "Tony Ramos" },
-    { "type": "novela", "name": "Celebridade" },
-    { "type": "ator", "name": "Marcos Palmeira" }
-  ]
-}
-```
-
-| Campo | Tipo | Descrição |
-|-------|------|-----------|
-| `initial_nodes` | `GraphNode[]` | Os 2 atores iniciais do jogo |
-| `nodes` | `GraphNode[]` | Todos os nós no grafo (incluindo os iniciais) |
-
-**Response — Caminho encontrado** `200 OK`
-
-```json
-{
-  "nodes": [
-    { "type": "ator", "name": "Fernanda Montenegro" },
-    { "type": "novela", "name": "Celebridade" },
-    { "type": "ator", "name": "Tony Ramos" }
-  ],
-  "grau": 2,
-  "found": true
-}
-```
-
-**Response — Caminho não encontrado** `200 OK`
-
-```json
-{
-  "nodes": null,
-  "grau": 0,
-  "found": false
-}
-```
-
-| Campo | Tipo | Descrição |
-|-------|------|-----------|
-| `nodes` | `GraphNode[] \| null` | Nós do caminho encontrado, ou null |
-| `grau` | `int` | Grau de separação (número de arestas no caminho) |
-| `found` | `bool` | Se o caminho foi encontrado |
-
----
-
-## Códigos de Erro
+## Códigos de Erro (TMDB)
 
 | Código | Descrição |
 |--------|-----------|
@@ -233,10 +106,10 @@ Verifica se existe um caminho válido entre os dois atores iniciais, passando ap
 
 ## Autenticação
 
-A API não requer autenticação para os endpoints públicos. A autenticação com o TMDB é feita internamente via Bearer token configurado no backend.
+Os endpoints públicos não requerem autenticação. A autenticação com o TMDB é
+feita internamente via Bearer token (`TMDB_API_TOKEN`).
 
 ## CORS
 
-Origens permitidas são configuradas via variável de ambiente `FRONTEND_URL` (padrão: `http://localhost:5173`).
-
-Métodos e headers permitidos: todos (`*`).
+Origens permitidas via `FRONTEND_URL` (padrão `http://localhost:5173`) +
+`CORS_ORIGINS` (lista separada por vírgulas). Métodos e headers: todos (`*`).

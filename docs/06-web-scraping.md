@@ -2,7 +2,7 @@
 
 ## Visão Geral
 
-O módulo de scraping é responsável por coletar dados de elenco das novelas da Globo a partir do site **Memória Globo** (`memoriaglobo.globo.com`). Esses dados são posteriormente processados e importados para o banco Neo4j.
+O módulo de scraping é responsável por coletar dados de elenco das novelas da Globo a partir do site **Memória Globo** (`memoriaglobo.globo.com`). Esses dados são posteriormente processados e convertidos no dataset do grafo embarcado no frontend (frontend/src/data/graph.json).
 
 ## Estrutura de Diretórios
 
@@ -149,13 +149,15 @@ neo4j/atores_nodes.csv
 neo4j/novelas_nodes.csv
 neo4j/relationships.csv
        │
-       │  Importação Neo4j
+       │  build-graph.py (frontend/scripts)
        ▼
-Neo4j Database
-  (Atores)─[:atua_em]─>(Novelas)
+frontend/src/data/graph.json
+  (carregado no Cytoscape headless)
 ```
 
-Os arquivos CSV na pasta `neo4j/` seguem o formato de importação do Neo4j, com colunas prefixadas por `~` (`~id`, `~label`, `~from`, `~to`).
+Os arquivos CSV na pasta `neo4j/` (nome histórico) usam colunas prefixadas por
+`~` (`~id`, `~label`, `~from`, `~to`) e são a **fonte** do dataset do grafo
+embarcado no frontend — não há mais importação para um banco Neo4j.
 
 ## Projeto Tutorial
 

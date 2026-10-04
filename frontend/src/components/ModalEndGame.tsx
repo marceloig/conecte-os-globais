@@ -1,76 +1,51 @@
-
-import { Flex, Text, Button, Dialog, Heading} from '@radix-ui/themes';
-import { memo, useState, useCallback } from 'react';
-import { useReactFlow} from '@xyflow/react';
-import { shareResult } from '../lib/share';
-
-interface Graph {
-    grau?: number;
-    nodes?: any;
-    found?: boolean;
-}
+import { Flex, Text, Button, Dialog, Heading } from '@radix-ui/themes';
+import { memo, useState, useCallback, useEffect } from 'react';
+import { shareResult, type GameNode } from '../lib/share';
+import type { ShortestPathResult } from '@/lib/graph';
 
 interface ModalProps {
     open?: boolean;
     onOpenChange?: (open: boolean) => void;
-    graph?: Graph
+    result?: ShortestPathResult | null;
 }
 
-function ModalEndGame({ open = false, onOpenChange, graph }: ModalProps) {
-    const { getEdges, addEdges } = useReactFlow();
+/**
+ * ModalEndGame — modal de vitória. Mudança vs. versão ReactFlow:
+ *  - não usa mais `useReactFlow` para animar arestas (o board Cytoscape anima a
+ *    classe `.path` por conta própria); recebe o `result` do pathfinding local.
+ *  - monta o texto do caminho ("A ➔ Novela ➔ B") a partir de `result.nodes`.
+ *  - o compartilhamento (share.ts) é preservado integralmente.
+ */
+function ModalEndGame({ open = false, onOpenChange, result }: ModalProps) {
     const [path, setPath] = useState('');
     const [isSharing, setIsSharing] = useState(false);
     const [copyFeedback, setCopyFeedback] = useState(false);
 
+    useEffect(() => {
+        if (!result?.nodes?.length) {
+            setPath('');
+            return;
+        }
+        setPath(result.nodes.map((n) => n.name).join('\n➔\n'));
+    }, [result]);
+
     const handleShare = useCallback(async () => {
+        if (!result?.nodes) return;
         setIsSharing(true);
         try {
-            const result = await shareResult(graph!.nodes);
-            if (result.status === "copied") {
+            const nodes: GameNode[] = result.nodes.map((n) => ({ name: n.name, type: n.type }));
+            const outcome = await shareResult(nodes);
+            if (outcome.status === "copied") {
                 setCopyFeedback(true);
                 setTimeout(() => setCopyFeedback(false), 2000);
             }
         } finally {
             setIsSharing(false);
         }
-    }, [graph]);
-
-    const handleOpenChange = useCallback((newOpen: boolean) => {
-        const edges = getEdges();
-        const connection = [];
-
-        for (let index = 0; index < edges.length; index++) {
-            let edge = edges[index];
-            for (let nodeIndex = 0; nodeIndex < graph?.nodes.length - 1; nodeIndex++) {
-                const element = graph?.nodes[nodeIndex];
-                const nextElement = graph?.nodes[nodeIndex + 1];
-
-                if (edge.id === `${element.name}-${nextElement.name}`) {
-                    edge.animated = true;
-                    break;
-                } else if (edge.id === `${nextElement.name}-${element.name}`) {
-                    edge.animated = true;
-                    break;
-                }
-
-            }
-            addEdges(edge);
-        }
-
-        for (let nodeIndex = 0; nodeIndex < graph?.nodes.length; nodeIndex++) {
-            const element = graph?.nodes[nodeIndex];
-            connection.push(element.name);
-            connection.push('➔');
-        }
-        connection.pop();
-
-        setPath(connection.join('\n'));
-        onOpenChange?.(newOpen);
-    }, [open]);
-
+    }, [result]);
 
     return (
-        <Dialog.Root open={open} onOpenChange={handleOpenChange}>
+        <Dialog.Root open={open} onOpenChange={onOpenChange}>
             <Dialog.Content maxWidth="450px">
                 <Dialog.Title>Fim de jogo</Dialog.Title>
                 <Flex direction="column" gap="3">
@@ -80,7 +55,7 @@ function ModalEndGame({ open = false, onOpenChange, graph }: ModalProps) {
                     <Text size="4" align="center">
                         Você conseguiu conectar os artistas Globais através de suas conexões!
                     </Text>
-                    <Text size="4" align="center">
+                    <Text size="4" align="center" style={{ whiteSpace: 'pre-line' }}>
                         {path}
                     </Text>
                 </Flex>
@@ -91,7 +66,7 @@ function ModalEndGame({ open = false, onOpenChange, graph }: ModalProps) {
                             Fechar
                         </Button>
                     </Dialog.Close>
-                    {graph?.found === true && graph?.nodes?.length >= 3 && (
+                    {result?.found === true && (result?.nodes?.length ?? 0) >= 3 && (
                         <Button onClick={handleShare} disabled={isSharing}>
                             {copyFeedback ? "Copiado!" : "Compartilhar"}
                         </Button>

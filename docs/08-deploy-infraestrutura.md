@@ -1,5 +1,9 @@
 # 08 — Deploy e Infraestrutura
 
+O backend é um serviço FastAPI **só-TMDB**, sem banco de dados. O frontend é
+estático (dataset do grafo embarcado) e pode ser servido por qualquer CDN / host
+estático.
+
 ## Docker
 
 ### Dockerfile (Backend)
@@ -25,12 +29,6 @@ EXPOSE 8000
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
 ```
 
-**Características:**
-- Imagem base: `python:3.13-slim` (mínima)
-- Dependências compiladas como wheels no stage de build
-- Imagem final não contém ferramentas de compilação
-- Porta exposta: `8000`
-
 ### Docker Compose
 
 ```yaml
@@ -46,44 +44,23 @@ services:
     volumes:
       - .:/app              # Hot reload em desenvolvimento
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
-    depends_on:
-      - db
-
-  db:
-    image: neo4j:2025.07.0
-    environment:
-      NEO4J_AUTH: conecte_os_globais
-    ports:
-      - "7474:7474"          # Neo4j Browser
-    volumes:
-      - neo4j_data:/var/lib/neo4j/data
-
-volumes:
-  neo4j_data:                # Volume persistente para dados Neo4j
 ```
 
 **Serviços:**
 
 | Serviço | Imagem | Porta | Descrição |
 |---------|--------|-------|-----------|
-| `api` | Build local | 8000 | Backend FastAPI com hot reload |
-| `db` | `neo4j:2025.07.0` | 7474 | Banco de dados Neo4j |
+| `api` | Build local | 8000 | Backend FastAPI (só-TMDB) com hot reload |
+
+> Não há mais serviço de banco de dados no compose — o grafo vive no frontend.
 
 **Comandos:**
 
 ```bash
-# Subir todos os serviços
-docker-compose up --build
-
-# Subir em background
-docker-compose up -d --build
-
-# Parar serviços
-docker-compose down
-
-# Ver logs
-docker-compose logs -f api
-docker-compose logs -f db
+docker-compose up --build       # subir
+docker-compose up -d --build    # em background
+docker-compose down             # parar
+docker-compose logs -f api      # logs
 ```
 
 ## Variáveis de Ambiente
@@ -91,21 +68,16 @@ docker-compose logs -f db
 ### Backend (`.env`)
 
 ```env
-NEO4J_URI="neo4j://localhost:56789"
-NEO4J_AUTH_USER="user"
-NEO4J_AUTH_PASSWORD="password"
 TMDB_API_TOKEN="seu_token_tmdb_aqui"
 FRONTEND_URL="http://localhost:5173"
+CORS_ORIGINS="https://conecteosglobais.igormarcelo.dev.br"
 ```
 
 | Variável | Obrigatória | Descrição |
 |----------|-------------|-----------|
-| `NEO4J_URI` | Sim | URI de conexão com o Neo4j (protocolo Bolt) |
-| `NEO4J_AUTH_USER` | Sim | Usuário do Neo4j |
-| `NEO4J_AUTH_PASSWORD` | Sim | Senha do Neo4j |
 | `TMDB_API_TOKEN` | Sim | Token Bearer da API do TMDB |
-| `FRONTEND_URL` | Não | URL do frontend para CORS (padrão: `http://localhost:5173`) |
-| `CORS_ORIGINS` | Não | URLs adicionais para CORS, separadas por vírgula (ex: `https://conecteosglobais.igormarcelo.dev.br`) |
+| `FRONTEND_URL` | Não | Origem do frontend para CORS (padrão: `http://localhost:5173`) |
+| `CORS_ORIGINS` | Não | Origens adicionais para CORS, separadas por vírgula |
 
 ### Frontend (`.env`)
 
@@ -115,9 +87,23 @@ VITE_API_ENDPOINT=http://localhost:8000
 
 | Variável | Obrigatória | Descrição |
 |----------|-------------|-----------|
-| `VITE_API_ENDPOINT` | Sim | URL base da API backend |
+| `VITE_API_ENDPOINT` | Sim | URL base da API backend (imagens) |
 
 > Variáveis prefixadas com `VITE_` são expostas ao código do frontend pelo Vite.
+
+## Build do Frontend
+
+O dataset do grafo é embarcado no bundle; gere-o antes do build se os CSVs mudaram:
+
+```bash
+cd frontend
+npm ci
+npm run build:graph        # src/data/graph.json
+npm run build              # dist/ (estático)
+```
+
+Publique o conteúdo de `dist/` em qualquer host estático (S3 + CloudFront,
+Vercel, Netlify, etc.).
 
 ## Infraestrutura AWS
 
@@ -135,53 +121,25 @@ O backend FastAPI roda em **AWS ECS com Fargate**, containerizado via Docker.
 
 #### Variáveis de Ambiente no ECS
 
-As variáveis de ambiente são configuradas na **Task Definition** do ECS:
+Configuradas na **Task Definition**:
 
 | Variável | Valor em Produção |
 |----------|-------------------|
-| `NEO4J_URI` | `neo4j://<ip-privado-ec2>:7687` |
-| `NEO4J_AUTH_USER` | Usuário do Neo4j |
-| `NEO4J_AUTH_PASSWORD` | Senha do Neo4j |
 | `TMDB_API_TOKEN` | Token da API TMDB |
 | `FRONTEND_URL` | `https://conecteosglobais.igormarcelo.dev.br` |
 | `CORS_ORIGINS` | `https://conecteosglobais.igormarcelo.dev.br` |
 
-> Para segredos sensíveis, use **AWS Secrets Manager** ou **SSM Parameter Store** referenciados na Task Definition.
+> Para segredos sensíveis (como o `TMDB_API_TOKEN`), use **AWS Secrets Manager**
+> ou **SSM Parameter Store** referenciados na Task Definition.
 
 #### CORS em Produção
 
-A variável `CORS_ORIGINS` aceita múltiplas origens separadas por vírgula. Ela é combinada com `FRONTEND_URL` para formar a lista completa de origens permitidas.
+`CORS_ORIGINS` aceita múltiplas origens separadas por vírgula, combinadas com
+`FRONTEND_URL`:
 
 ```env
 CORS_ORIGINS=https://conecteosglobais.igormarcelo.dev.br,https://outro-dominio.com
 ```
-
-### Neo4j em EC2
-
-O banco Neo4j pode ser hospedado em uma instância EC2 na AWS. A conexão local é feita via **AWS Systems Manager (SSM) Port Forwarding**.
-
-#### Pré-requisitos
-
-- AWS CLI configurado com credenciais válidas
-- Plugin Session Manager instalado
-- Instância EC2 com SSM Agent ativo
-
-#### Comando de Port Forwarding
-
-```bash
-aws ssm start-session \
-    --target i-xxxxxxxxxxx \
-    --document-name AWS-StartPortForwardingSession \
-    --parameters '{"portNumber":["7687"], "localPortNumber":["56789"]}'
-```
-
-| Parâmetro | Valor | Descrição |
-|-----------|-------|-----------|
-| `--target` | `i-xxxxxxxxxxx` | ID da instância EC2 |
-| `portNumber` | `7687` | Porta do Neo4j na instância (Bolt) |
-| `localPortNumber` | `56789` | Porta local mapeada |
-
-Após executar, o Neo4j estará acessível em `neo4j://localhost:56789`.
 
 ## Portas Utilizadas
 
@@ -189,9 +147,6 @@ Após executar, o Neo4j estará acessível em `neo4j://localhost:56789`.
 |-------|---------|-----------|
 | `5173` | Frontend (Vite dev server) | HTTP |
 | `8000` | Backend (FastAPI/Uvicorn) | HTTP |
-| `7474` | Neo4j Browser | HTTP |
-| `7687` | Neo4j Bolt | Bolt |
-| `56789` | Neo4j via SSM (local) | Bolt |
 
 ## Diagrama de Deploy
 
@@ -201,39 +156,18 @@ Após executar, o Neo4j estará acessível em `neo4j://localhost:56789`.
 ┌─────────────────────────────────────────────┐
 │              Máquina Local                   │
 │                                             │
-│  ┌──────────┐  ┌──────────┐  ┌───────────┐ │
-│  │ Frontend │  │ Backend  │  │ Neo4j     │ │
-│  │ :5173    │─▶│ :8000    │─▶│ :7474     │ │
-│  │ (Vite)   │  │ (FastAPI)│  │ (Docker)  │ │
-│  └──────────┘  └──────────┘  └───────────┘ │
-│                      │                      │
-│                      ▼                      │
-│              ┌──────────────┐               │
-│              │  TMDB API    │               │
-│              │  (externo)   │               │
-│              └──────────────┘               │
-└─────────────────────────────────────────────┘
-```
-
-### Desenvolvimento com Neo4j Remoto (SSM)
-
-```
-┌─────────────────────────────────────────────┐
-│              Máquina Local                   │
-│                                             │
 │  ┌──────────┐  ┌──────────┐                 │
 │  │ Frontend │  │ Backend  │                 │
 │  │ :5173    │─▶│ :8000    │──┐              │
+│  │ (Vite +  │  │ (FastAPI │  │              │
+│  │ graph.js)│  │  TMDB)   │  │              │
 │  └──────────┘  └──────────┘  │              │
-│                              │ SSM Tunnel   │
-│                              │ :56789       │
-└──────────────────────────────┼──────────────┘
-                               │
-                               ▼
-                    ┌──────────────────┐
-                    │  AWS EC2         │
-                    │  Neo4j :7687     │
-                    └──────────────────┘
+│                              ▼              │
+│                      ┌──────────────┐       │
+│                      │  TMDB API    │       │
+│                      │  (externo)   │       │
+│                      └──────────────┘       │
+└─────────────────────────────────────────────┘
 ```
 
 ### Produção (AWS)
@@ -244,21 +178,20 @@ Após executar, o Neo4j estará acessível em `neo4j://localhost:56789`.
 │                                                              │
 │  ┌─────────────────┐    ┌──────────────────────────────────┐ │
 │  │  API Gateway     │    │  ECS Fargate                     │ │
-│  │  (HTTPS)         │───▶│  Backend FastAPI :8000            │ │
+│  │  (HTTPS)         │───▶│  Backend FastAPI :8000 (só-TMDB)  │ │
 │  │                  │    │  (Docker container from ECR)      │ │
-│  └─────────────────┘    └──────────┬───────────┬───────────┘ │
-│                                    │           │             │
-│                         ┌──────────▼──┐  ┌─────▼──────────┐ │
-│                         │  EC2        │  │  TMDB API      │ │
-│                         │  Neo4j :7687│  │  (externo)     │ │
-│                         └─────────────┘  └────────────────┘ │
-│                                                              │
+│  └─────────────────┘    └──────────────────┬───────────────┘ │
+│                                            │                 │
+│                                   ┌────────▼────────┐        │
+│                                   │  TMDB API       │        │
+│                                   │  (externo)      │        │
+│                                   └─────────────────┘        │
 └──────────────────────────────────────────────────────────────┘
                          ▲
                          │ HTTPS
           ┌──────────────┴──────────────┐
-          │  Frontend (hospedagem       │
-          │  estática / CDN)            │
+          │  Frontend (estático / CDN)  │
+          │  graph.json embarcado        │
           │  conecteosglobais.          │
           │  igormarcelo.dev.br         │
           └─────────────────────────────┘

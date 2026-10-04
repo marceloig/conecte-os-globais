@@ -4,56 +4,54 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                     FRONTEND (React + Vite)                     │
-│                     http://localhost:5173                        │
+│                   FRONTEND (React + Vite)                        │
+│                   http://localhost:5173                          │
 │                                                                 │
 │  ┌───────────────┐  ┌───────────────┐  ┌─────────────────────┐  │
-│  │   App.tsx      │  │  GraphNode    │  │  ModalEndGame       │  │
-│  │  (ReactFlow)   │  │  (Popover)    │  │  ModalHowToPlay     │  │
-│  │  Game State    │  │  Node Actions │  │  FuzzyText          │  │
+│  │   App.tsx      │  │  GameBoard    │  │  ModalEndGame       │  │
+│  │  Game State    │  │  (Cytoscape)  │  │  ModalHowToPlay     │  │
+│  │                │  │  Popover      │  │  FuzzyText          │  │
 │  └───────┬───────┘  └───────┬───────┘  └─────────────────────┘  │
 │          │                  │                                    │
-│          └──────────┬───────┘                                    │
-│                     │ Axios HTTP                                 │
-└─────────────────────┼───────────────────────────────────────────┘
-                      │
-                      ▼
+│          │        ┌─────────▼─────────────────────────────┐     │
+│          │        │  lib/graph.ts                          │     │
+│          │        │  Cytoscape HEADLESS (grafo completo)   │     │
+│          │        │  getRandomAtor / listNovelasByAtor /   │     │
+│          │        │  listAtoresByNovela / aStar(caminho)   │     │
+│          │        │  ◀── src/data/graph.json (embarcado)   │     │
+│          │        └────────────────────────────────────────┘     │
+│          │ Axios HTTP (apenas imagens)                            │
+└──────────┼───────────────────────────────────────────────────────┘
+           │
+           ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                   BACKEND (FastAPI + Uvicorn)                    │
-│                   http://localhost:8000                          │
+│                 BACKEND (FastAPI + Uvicorn) — SÓ-TMDB            │
+│                 http://localhost:8000                            │
 │                                                                 │
 │  ┌──────────────────────────────────────────────────────────┐   │
-│  │  main.py — FastAPI App + CORS Middleware                  │   │
+│  │  main.py — FastAPI App + CORS + load_dotenv()             │   │
 │  └──────────────────────┬───────────────────────────────────┘   │
 │                         │                                       │
 │  ┌──────────────────────▼───────────────────────────────────┐   │
 │  │  api/v1/endpoints.py — Route Handlers                     │   │
 │  │                                                           │   │
-│  │  GET  /atores/random          → Ator aleatório            │   │
-│  │  GET  /atores/{name}/novelas  → Novelas de um ator        │   │
-│  │  GET  /novelas/{name}/atores  → Atores de uma novela      │   │
-│  │  GET  /atores/{name}          → Detalhes do ator (TMDB)   │   │
-│  │  GET  /novelas/{name}         → Detalhes da novela (TMDB) │   │
-│  │  POST /graph/shortest_path    → Validação do caminho      │   │
-│  │  GET  /health                 → Health check              │   │
-│  └──────────┬──────────────────────────────┬────────────────┘   │
-│             │                              │                    │
-│  ┌──────────▼──────────┐    ┌──────────────▼────────────────┐   │
-│  │  db/neo4j.py        │    │  api/service.py               │   │
-│  │  Neo4jRepository    │    │  TMDBService                  │   │
-│  │  (Queries Cypher)   │    │  (API Externa)                │   │
-│  └──────────┬──────────┘    └──────────────┬────────────────┘   │
-│             │                              │                    │
-└─────────────┼──────────────────────────────┼────────────────────┘
-              │                              │
-              ▼                              ▼
-┌──────────────────────┐      ┌──────────────────────────┐
-│   Neo4j Database     │      │   TMDB API               │
-│   (Banco de Grafos)  │      │   api.themoviedb.org     │
-│                      │      │                          │
-│  (Ator)─[:atua_em]─▶ │      │  Imagens de atores       │
-│        (Novela)      │      │  Posters de novelas      │
-└──────────────────────┘      └──────────────────────────┘
+│  │  GET  /atores/{name}   → Imagem (perfil) do ator (TMDB)   │   │
+│  │  GET  /novelas/{name}  → Imagem (poster) da novela (TMDB) │   │
+│  │  GET  /health          → Health check                     │   │
+│  └──────────────────────────────┬────────────────────────────┘   │
+│                                 │                               │
+│                 ┌───────────────▼────────────────┐              │
+│                 │  api/service.py — TMDBService   │              │
+│                 └───────────────┬────────────────┘              │
+└─────────────────────────────────┼────────────────────────────────┘
+                                  │
+                                  ▼
+                      ┌──────────────────────────┐
+                      │   TMDB API               │
+                      │   api.themoviedb.org     │
+                      │   Imagens de atores      │
+                      │   Posters de novelas     │
+                      └──────────────────────────┘
 ```
 
 ## Componentes Principais
@@ -62,86 +60,97 @@
 
 | Componente | Responsabilidade |
 |------------|-----------------|
-| `App.tsx` | Componente principal, gerencia estado do jogo e renderiza o ReactFlow |
-| `GraphNode.tsx` | Nó interativo do grafo com popover para seleção de conexões |
-| `ModalEndGame.tsx` | Modal de vitória exibido quando o caminho é encontrado |
-| `ModalHowToPlay.tsx` | Modal com instruções de como jogar |
-| `FuzzyText.tsx` | Título animado com efeito de "fuzzy/glitch" via Canvas |
-| `NewNode.tsx` | Nó placeholder ("+") para posições iniciais |
-| `base-node.tsx` | Componente base reutilizável para estilização de nós |
+| `App.tsx` | Componente principal; gerencia estado do jogo e orquestra o board |
+| `components/GameBoard.tsx` | Board Cytoscape visível; popover de conexões; auto-conexão de arestas; dispara a verificação de caminho |
+| `lib/graph.ts` | Camada de grafo local — Cytoscape **headless** com o grafo completo; substitui as consultas que antes iam ao banco |
+| `data/graph.json` | Dataset do grafo embarcado (gerado dos CSVs) |
+| `components/ModalEndGame.tsx` | Modal de vitória (grau de separação + compartilhamento) |
+| `components/ModalHowToPlay.tsx` | Instruções de como jogar |
+| `components/FuzzyText.tsx` | Título animado com efeito CRT via Canvas |
+| `components/TvStaticBackground.tsx` | Fundo de estática/scanlines |
+| `lib/share.ts` | Geração do texto de resultado e Web Share API |
 
 ### Backend
 
 | Módulo | Responsabilidade |
 |--------|-----------------|
-| `main.py` | Inicialização do FastAPI, CORS e roteamento |
-| `endpoints.py` | Handlers das rotas da API v1 |
+| `main.py` | Inicialização do FastAPI, CORS, carga do `.env` e roteamento |
+| `endpoints.py` | Handlers das rotas da API v1 (só-TMDB) + health |
 | `service.py` | Integração com a API do TMDB para busca de imagens |
-| `neo4j.py` | Repositório de acesso ao banco Neo4j (queries Cypher) |
-| `models.py` | Modelos Pydantic para validação de dados |
+| `models.py` | Modelos Pydantic (`Ator`, `Novela`, `HealthResponse`) |
 | `config.py` | Configurações da aplicação via variáveis de ambiente |
 
 ### Dados
 
 | Componente | Responsabilidade |
 |------------|-----------------|
-| Neo4j | Armazena o grafo de atores, novelas e relacionamentos |
+| `graph.json` | Dataset do grafo (atores, novelas, relações) carregado no Cytoscape headless |
+| `scripts/build-graph.py` | Gera o `graph.json` a partir dos CSVs |
+| CSVs (`neo4j/`) | **Fonte** do dataset (não há mais banco em runtime) |
 | TMDB API | Fornece imagens de perfil de atores e posters de novelas |
 | Scrapy Spider | Coleta dados de elenco do site Memória Globo |
-| CSVs (`neo4j/`) | Arquivos de importação para popular o banco Neo4j |
 
 ## Fluxo de Dados
 
 ### Início de Jogo
 
 ```
-Frontend                    Backend                     Neo4j          TMDB
-   │                           │                          │              │
-   │── GET /atores/random ────▶│                          │              │
-   │                           │── get_random_atores() ──▶│              │
-   │                           │◀── "Nome do Ator" ───────│              │
-   │                           │── search_person() ──────────────────────▶│
-   │                           │◀── { profile_path } ────────────────────│
-   │◀── { name, img } ────────│                          │              │
-   │                           │                          │              │
-   │── GET /atores/random ────▶│  (repete para 2º ator)  │              │
+Frontend (lib/graph.ts)              Backend                 TMDB
+   │                                    │                      │
+   │ getRandomAtor() x2 (local)         │                      │
+   │ (sorteio sobre o grafo headless)   │                      │
+   │                                    │                      │
+   │── GET /atores/{nome}  (imagem) ───▶│                      │
+   │                                    │── search_person() ──▶│
+   │                                    │◀── { profile_path } ─│
+   │◀── { name, img } ──────────────────│                      │
 ```
 
 ### Adição de Nó
 
 ```
-Frontend                    Backend                     Neo4j
-   │                           │                          │
-   │── GET /atores/{n}/novelas▶│                          │
-   │                           │── list_novelas_by_ator()▶│
-   │                           │◀── [novela1, novela2...] │
-   │◀── [{ name }...] ────────│                          │
+Frontend                                 (sem rede para o grafo)
+   │
+   │ listNovelasByAtor(nome)  ← Cytoscape headless (local)
+   │ listAtoresByNovela(nome) ← Cytoscape headless (local)
+   │
+   │── GET /atores|novelas/{nome} ─▶ backend (apenas imagem do novo nó)
 ```
 
 ### Verificação de Caminho
 
 ```
-Frontend                    Backend                     Neo4j
-   │                           │                          │
-   │── POST /graph/shortest_  ▶│                          │
-   │       path                │                          │
-   │   { initial_nodes,       │                          │
-   │     nodes }               │── find_filter_          │
-   │                           │   shortest_path() ──────▶│
-   │                           │◀── path, grau ───────────│
-   │◀── { nodes, grau, found }│                          │
+Frontend (lib/graph.ts)                  (100% local, sem rede)
+   │
+   │ findFilterShortestPath(iniciais, jogados)
+   │   → subgrafo induzido pelos nós jogados
+   │   → cy.aStar({ directed:false })
+   │   → { nodes, grau, found }
 ```
 
 ## Decisões de Arquitetura
 
-1. **Neo4j como banco de dados**: Escolhido por ser um banco de grafos nativo, ideal para modelar relações entre atores e novelas e executar queries de caminho mais curto de forma eficiente.
+1. **Grafo no frontend (Cytoscape.js)**: o grafo de atores/novelas é um dataset
+   estático embarcado, carregado numa instância **headless** do Cytoscape. É um
+   motor de grafos de verdade — expõe `aStar`/`bfs`/`dijkstra` nativos —, então a
+   estrutura consultável é a própria instância `cy`. Elimina a dependência de um
+   banco em runtime e torna toda a lógica de jogo offline.
 
-2. **FastAPI**: Framework Python moderno com suporte nativo a async, validação automática via Pydantic e documentação OpenAPI gerada automaticamente.
+2. **Pathfinding por subgrafo induzido**: a verificação do caminho mais curto
+   restrito aos nós jogados é feita montando um subgrafo com apenas esses nós e
+   rodando `aStar` não-dirigido — qualquer caminho encontrado já respeita a
+   restrição por construção.
 
-3. **React Flow**: Biblioteca especializada em visualização e manipulação de grafos interativos, permitindo drag-and-drop, zoom e pan nativamente.
+3. **FastAPI**: framework Python moderno com async, validação Pydantic e OpenAPI
+   automático.
 
-4. **TMDB API**: Utilizada para enriquecer a experiência visual com fotos reais dos atores e posters das novelas, sem necessidade de armazenar imagens localmente.
+4. **Backend só-TMDB**: o único papel do backend é ser proxy das imagens do TMDB
+   (protege o `TMDB_API_TOKEN`, que não pode ir para o browser) e enriquecer a
+   UI com fotos de atores e posters de novelas.
 
-5. **Separação Frontend/Backend**: Arquitetura desacoplada permite desenvolvimento independente e deploy separado de cada camada.
+5. **Separação Frontend/Backend**: arquitetura desacoplada permite desenvolvimento
+   e deploy independentes.
 
-6. **AWS ECS (Fargate)**: Backend roda em containers gerenciados pelo ECS com Fargate, eliminando a necessidade de gerenciar servidores. A imagem Docker é armazenada no ECR e o API Gateway roteia o tráfego externo para o serviço ECS.
+6. **AWS ECS (Fargate)**: backend roda em containers no ECS/Fargate; imagem no
+   ECR; API Gateway roteia o tráfego externo. O frontend é estático e pode ser
+   servido por qualquer CDN/host estático.

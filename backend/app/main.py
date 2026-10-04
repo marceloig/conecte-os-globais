@@ -1,3 +1,10 @@
+from dotenv import load_dotenv
+
+# Carrega o .env no ambiente antes de qualquer import que leia os.getenv
+# (ex.: TMDBService). Antes isto acontecia como efeito colateral do import
+# de app.db.neo4j, removido na migração para o grafo no frontend.
+load_dotenv()
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1.api import api_router

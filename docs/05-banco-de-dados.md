@@ -1,73 +1,57 @@
-# 05 — Banco de Dados (Neo4j)
+# 05 — Dados do Grafo
 
-## Por que Neo4j?
+O grafo de atores, novelas e relações **não vive num banco em runtime**. Ele é um
+dataset estático embarcado no frontend e consultado por uma instância **headless**
+do Cytoscape.js.
 
-O Neo4j é um banco de dados de grafos nativo, ideal para este projeto porque:
+## Por que o grafo no frontend (Cytoscape)?
 
-- O domínio do problema é naturalmente um grafo (atores conectados a novelas)
-- A operação central do jogo é encontrar o **caminho mais curto** entre dois nós
-- A função `shortestPath` do Neo4j é otimizada para esse tipo de consulta
-- Queries de travessia de grafos são significativamente mais rápidas que JOINs em bancos relacionais
+- O domínio é naturalmente um grafo (atores conectados a novelas).
+- A operação central do jogo é encontrar o **caminho mais curto** entre dois nós.
+- O Cytoscape.js é um motor de grafos de verdade: expõe `aStar`, `bfs` e
+  `dijkstra` nativos — a mesma capacidade que antes exigia um banco de grafos.
+- Com o dataset embarcado, toda a lógica do jogo roda offline; o backend só serve
+  imagens.
 
-## Modelo de Dados
-
-### Nós (Nodes)
-
-#### Atores
-
-```
-(:Atores {name: "Nome do Ator"})
-```
-
-| Propriedade | Tipo | Descrição |
-|-------------|------|-----------|
-| `name` | string | Nome completo do ator |
-
-#### Novelas
+## Pipeline de dados
 
 ```
-(:Novelas {name: "Nome da Novela"})
+Scrapy (Memória Globo)  ─▶  CSVs em neo4j/  ─▶  scripts/build-graph.py  ─▶  src/data/graph.json  ─▶  Cytoscape headless
 ```
 
-| Propriedade | Tipo | Descrição |
-|-------------|------|-----------|
-| `name` | string | Nome da novela |
+Os CSVs em `neo4j/` são a **fonte** do dataset (o nome da pasta é histórico). O
+script `frontend/scripts/build-graph.py` os converte no `graph.json` embarcado.
 
-### Relacionamentos (Relationships)
-
-#### atua_em / ACTED_IN
-
-```
-(:Atores)-[:atua_em]->(:Novelas)
+```bash
+cd frontend
+npm run build:graph   # python3 scripts/build-graph.py -> src/data/graph.json
 ```
 
-| Propriedade | Tipo | Descrição |
-|-------------|------|-----------|
-| `personagem` | string (opcional) | Nome do personagem interpretado |
+Saída atual: **7.700 atores · 303 novelas · 20.658 relações**.
 
-### Diagrama do Grafo
+## Formato do dataset (`graph.json`)
 
-```
-                    ┌──────────────┐
-                    │   Novela A   │
-                    └──────┬───────┘
-                           │ atua_em
-              ┌────────────┼────────────┐
-              │            │            │
-        ┌─────▼─────┐ ┌───▼────┐ ┌─────▼─────┐
-        │  Ator 1   │ │ Ator 2 │ │  Ator 3   │
-        └─────┬─────┘ └───┬────┘ └─────┬─────┘
-              │            │            │
-              │ atua_em    │ atua_em    │ atua_em
-              │            │            │
-        ┌─────▼─────┐ ┌───▼────┐ ┌─────▼─────┐
-        │  Novela B  │ │Novela C│ │  Novela D  │
-        └────────────┘ └────────┘ └────────────┘
+Formato de *elements* do Cytoscape:
+
+```json
+{
+  "nodes": [
+    { "data": { "id": "Afrânio Gama", "label": "Afrânio Gama", "type": "ator" } },
+    { "data": { "id": "Cabocla - 2ª versão", "label": "Cabocla - 2ª versão", "type": "novela" } }
+  ],
+  "edges": [
+    { "data": { "id": "Aisha Jambo__Cabocla - 2ª versão",
+                "source": "Aisha Jambo", "target": "Cabocla - 2ª versão",
+                "personagem": "Ritinha" } }
+  ]
+}
 ```
 
-## Arquivos de Importação (CSV)
+- `id` do nó = o `name` legível (o jogo identifica nós pelo nome).
+- `type` ∈ `{ "ator", "novela" }`.
+- A aresta `atua_em` é tratada como **não-direcionada** no pathfinding.
 
-Os dados são importados para o Neo4j via arquivos CSV localizados em `neo4j/`.
+## Arquivos de origem (CSV)
 
 ### `atores_nodes.csv`
 
@@ -75,14 +59,13 @@ Os dados são importados para o Neo4j via arquivos CSV localizados em `neo4j/`.
 ~id,~label,name
 "ator_Afrnio_Gama","Ator","Afrânio Gama"
 "ator_Aisha_Jambo","Ator","Aisha Jambo"
-"ator_Alexandre_David","Ator","Alexandre David"
 ```
 
 | Coluna | Descrição |
 |--------|-----------|
-| `~id` | Identificador único (formato: `ator_Nome_Sobrenome`) |
-| `~label` | Label do nó (`Ator`) |
-| `name` | Nome completo do ator |
+| `~id` | Identificador único de origem (`ator_Nome_Sobrenome`) |
+| `~label` | `Ator` |
+| `name` | Nome completo — vira o `id`/`label` do nó no `graph.json` |
 
 ### `novelas_nodes.csv`
 
@@ -90,124 +73,38 @@ Os dados são importados para o Neo4j via arquivos CSV localizados em `neo4j/`.
 ~id,~label,name
 "novela_Cabocla__2_verso","Novela","Cabocla - 2ª versão"
 "novela_Cama_de_Gato","Novela","Cama de Gato"
-"novela_Cambalacho","Novela","Cambalacho"
 ```
-
-| Coluna | Descrição |
-|--------|-----------|
-| `~id` | Identificador único (formato: `novela_Nome_Da_Novela`) |
-| `~label` | Label do nó (`Novela`) |
-| `name` | Nome da novela |
 
 ### `relationships.csv`
 
 ```csv
 ~id,~from,~to,~label,personagem
-"ator_Afrnio_Gama_acted_in_novela_Cabocla__2_verso","ator_Afrnio_Gama","novela_Cabocla__2_verso","ACTED_IN",
 "ator_Aisha_Jambo_acted_in_novela_Cabocla__2_verso","ator_Aisha_Jambo","novela_Cabocla__2_verso","ACTED_IN","Ritinha"
 ```
 
 | Coluna | Descrição |
 |--------|-----------|
-| `~id` | Identificador único do relacionamento |
-| `~from` | ID do nó de origem (ator) |
-| `~to` | ID do nó de destino (novela) |
-| `~label` | Tipo do relacionamento (`ACTED_IN`) |
+| `~from` / `~to` | IDs de origem (resolvidos para `name` no `graph.json`) |
+| `~label` | `ACTED_IN` |
 | `personagem` | Nome do personagem (opcional) |
 
-## Queries Cypher
+## Consultas no frontend (`src/lib/graph.ts`)
 
-### Ator Aleatório
+A instância headless (`cytoscape({ headless: true, elements })`) é o "banco". A
+camada `graph.ts` expõe:
 
-```cypher
-MATCH (a:Atores)
-RETURN a.name AS nome
-ORDER BY rand()
-LIMIT 1
-```
+| Função | Equivalente | Como |
+|--------|-------------|------|
+| `getRandomAtor()` | ator aleatório | sorteio sobre `nodes('[type="ator"]')` |
+| `listNovelasByAtor(name)` | novelas de um ator | `node.neighborhood('node[type="novela"]')`, ordenado |
+| `listAtoresByNovela(name)` | atores de uma novela | `node.neighborhood('node[type="ator"]')`, ordenado |
+| `findFilterShortestPath(iniciais, jogados)` | caminho mais curto filtrado | subgrafo induzido pelos nós jogados + `cy.aStar({ directed:false })` |
 
-### Novelas de um Ator
+### Caminho mais curto filtrado
 
-```cypher
-MATCH (a:Atores)-[:atua_em]->(n:Novelas)
-WHERE a.name = $ator
-RETURN n.name AS novela
-ORDER BY n.name
-```
-
-### Atores de uma Novela
-
-```cypher
-MATCH (a:Atores)-[:atua_em]->(n:Novelas)
-WHERE n.name = $novela
-RETURN a.name AS ator
-ORDER BY a.name
-```
-
-### Caminho Mais Curto (Filtrado)
-
-Esta é a query principal do jogo:
-
-```cypher
-MATCH path = shortestPath(
-    (source:Atores {name: $source_ator})-[*]-(target:Atores {name: $target_ator})
-)
-WHERE ALL(n in nodes(path) WHERE
-    (('Atores' IN labels(n) AND n.name IN $atores) OR
-     ('Novelas' IN labels(n) AND n.name IN $novelas))
-)
-RETURN path, length(path) as grau
-```
-
-**Parâmetros:**
-- `$source_ator` — Nome do primeiro ator (inicial esquerdo)
-- `$target_ator` — Nome do segundo ator (inicial direito)
-- `$atores` — Lista de nomes de atores adicionados pelo jogador
-- `$novelas` — Lista de nomes de novelas adicionadas pelo jogador
-
-**Comportamento:**
-- Usa `shortestPath` para encontrar o caminho mais curto entre os dois atores
-- O filtro `WHERE ALL` garante que **todos** os nós intermediários do caminho estejam na lista de nós que o jogador adicionou
-- Se não existir caminho válido com os nós disponíveis, retorna `null`
-- `length(path)` retorna o grau de separação (número de arestas)
-
-## Observações sobre Labels
-
-Existe uma diferença entre os labels nos CSVs e nas queries:
-
-| CSV | Query Cypher |
-|-----|-------------|
-| `Ator` | `Atores` |
-| `Novela` | `Novelas` |
-| `ACTED_IN` | `atua_em` |
-
-Isso indica que os dados podem ter sido transformados durante a importação para o Neo4j, ou que os labels no banco diferem dos CSVs de importação.
-
-## Conexão com o Banco
-
-### Local (via Docker Compose)
-
-```yaml
-db:
-  image: neo4j:2025.07.0
-  ports:
-    - "7474:7474"    # Browser HTTP
-  volumes:
-    - neo4j_data:/var/lib/neo4j/data
-```
-
-- **Neo4j Browser**: `http://localhost:7474`
-- **Bolt Protocol**: `neo4j://localhost:7687`
-
-### Remoto (via AWS SSM)
-
-Para conectar ao Neo4j hospedado em uma instância EC2 via port forwarding:
-
-```bash
-aws ssm start-session \
-    --target i-xxxxxxxxxxx \
-    --document-name AWS-StartPortForwardingSession \
-    --parameters '{"portNumber":["7687"], "localPortNumber":["56789"]}'
-```
-
-Isso mapeia a porta remota `7687` para a porta local `56789`, permitindo conexão via `neo4j://localhost:56789`.
+A regra do jogo — "existe caminho mais curto entre os 2 atores iniciais usando
+apenas nós que o jogador adicionou?" — é resolvida **por construção**: monta-se um
+subgrafo contendo apenas os nós jogados (e os 2 iniciais) e suas arestas, e roda-se
+`aStar` não-dirigido nesse subgrafo. Qualquer caminho encontrado já respeita a
+restrição, sem precisar de um filtro explícito. O **grau de separação** é o número
+de arestas do caminho (`nós − 1`).

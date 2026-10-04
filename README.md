@@ -6,175 +6,172 @@ Um jogo interativo que desafia os jogadores a conectar dois atores através de s
 
 O "Conecte os Globais" é inspirado no conceito dos "Seis Graus de Separação", onde os jogadores devem encontrar conexões entre atores através das novelas que participaram. O jogo utiliza uma interface visual com grafos interativos, permitindo que o usuário construa o caminho entre dois atores selecionados aleatoriamente.
 
+## 🏗️ Arquitetura
+
+O grafo de atores, novelas e relações vive **inteiramente no frontend**:
+renderizado e consultado pelo **Cytoscape.js**. O backend existe apenas como um
+proxy de imagens do **TMDB** — não há banco de dados em runtime.
+
+```
+┌───────────────────────────────────────────────┐
+│  Frontend (React + Vite + Cytoscape.js)        │
+│                                                │
+│  • Board visível: cytoscape() renderiza nós    │
+│    (atores/novelas) e arestas                  │
+│  • "Banco" de grafo: cytoscape() HEADLESS em    │
+│    memória, carregado de graph.json            │
+│  • Pathfinding: cy.aStar()/bfs() no navegador  │
+│                                                │
+│         │ Axios (apenas imagens)               │
+└─────────┼──────────────────────────────────────┘
+          ▼
+┌───────────────────────────────────────────────┐
+│  Backend (FastAPI) — SÓ-TMDB                   │
+│  GET /atores/{name}   → imagem de perfil        │
+│  GET /novelas/{name}  → poster da novela        │
+│  GET /health                                   │
+│         │                                       │
+│         ▼  TMDB API (api.themoviedb.org)        │
+└───────────────────────────────────────────────┘
+```
+
+Detalhes em [`docs/02-arquitetura.md`](./docs/02-arquitetura.md) e
+[`frontend/README.md`](./frontend/README.md).
+
 ## 🚀 Tecnologias Utilizadas
 
 ### Frontend
-- **React 19** - Biblioteca JavaScript para interfaces
-- **TypeScript** - Tipagem estática para JavaScript
-- **Vite** - Build tool e dev server
-- **React Flow (@xyflow/react)** - Biblioteca para grafos interativos
-- **Radix UI** - Componentes de interface acessíveis
-- **Tailwind CSS** - Framework CSS utilitário
-- **Axios** - Cliente HTTP para comunicação com a API
+- **React 19** + **TypeScript** + **Vite**
+- **Cytoscape.js** — renderização do grafo **e** motor de pathfinding (`aStar`/`bfs`) no próprio navegador
+- **Radix UI** + **Tailwind CSS** — interface
+- **Axios** — HTTP, apenas para buscar imagens no backend (TMDB)
+- Dataset do grafo embarcado como `graph.json` (gerado dos CSVs)
 
 ### Backend
-- **FastAPI** - Framework web moderno para Python
-- **Python 3.11+** - Linguagem de programação
-- **Neo4j** - Banco de dados de grafos
-- **Pydantic** - Validação de dados
-- **Uvicorn** - Servidor ASGI
+- **FastAPI** + **Uvicorn** — framework web / ASGI
+- **Python 3.11+** + **Pydantic** — validação
+- **HTTPX** — cliente HTTP para a API do TMDB
 
 ## 📁 Estrutura do Projeto
 
 ```
 conecte-os-globais/
 ├── frontend/
+│   ├── scripts/
+│   │   └── build-graph.py        # CSVs -> src/data/graph.json
 │   ├── src/
 │   │   ├── components/
-│   │   │   ├── base-node.tsx      # Componente base para nós do grafo
-│   │   │   ├── GraphNode.tsx      # Nó específico do jogo
-│   │   │   ├── NewNode.tsx        # Nó placeholder
-│   │   │   └── Modal.tsx          # Modal de resultado
+│   │   │   ├── GameBoard.tsx      # Board Cytoscape + popover de conexões
+│   │   │   ├── ModalEndGame.tsx   # Modal de vitória
+│   │   │   ├── ModalHowToPlay.tsx # Instruções
+│   │   │   ├── FuzzyText.tsx      # Título com efeito CRT
+│   │   │   └── TvStaticBackground.tsx
 │   │   ├── config/
 │   │   │   └── env.ts            # Configurações de ambiente
+│   │   ├── data/
+│   │   │   └── graph.json        # Dataset do grafo (gerado)
 │   │   ├── lib/
-│   │   │   └── utils.ts          # Utilitários
+│   │   │   ├── graph.ts          # Camada de grafo (Cytoscape headless)
+│   │   │   └── share.ts          # Compartilhamento do resultado
 │   │   ├── App.tsx               # Componente principal
 │   │   └── main.tsx              # Ponto de entrada
 │   ├── package.json
 │   └── vite.config.ts
-└── backend/
-    ├── app/
-    │   ├── api/v1/
-    │   │   ├── endpoints.py      # Rotas da API
-    │   │   └── api.py           # Configuração das rotas
-    │   ├── core/
-    │   │   └── config.py        # Configurações do backend
-    │   ├── db/
-    │   │   └── neo4j.py         # Conexão com Neo4j
-    │   ├── models/              # Modelos Pydantic
-    │   └── main.py             # Aplicação FastAPI
-    ├── tests/                  # Testes automatizados
-    ├── requirements.txt
-    └── docker-compose.yml
+├── backend/
+│   ├── app/
+│   │   ├── api/
+│   │   │   ├── service.py        # Integração TMDB
+│   │   │   └── v1/
+│   │   │       ├── endpoints.py  # Rotas (só-TMDB) + health
+│   │   │       └── api.py        # Configuração das rotas
+│   │   ├── core/
+│   │   │   └── config.py         # Configurações do backend
+│   │   ├── models.py             # Modelos Pydantic
+│   │   └── main.py               # Aplicação FastAPI
+│   ├── tests/                    # Testes automatizados
+│   ├── requirements.txt
+│   └── docker-compose.yml
+└── neo4j/                        # CSVs: FONTE do dataset do grafo
+    ├── atores_nodes.csv
+    ├── novelas_nodes.csv
+    └── relationships.csv
 ```
 
 ## 🛠️ Como Executar
 
 ### Pré-requisitos
 
-- **Node.js 18+** e npm/yarn
+- **Node.js 20+** e npm/yarn
 - **Python 3.11+** e pip
-- **Neo4j** (local ou Docker)
-- **Docker** (opcional, mas recomendado)
-
-### Executando com Docker (Recomendado)
-
-1. Clone o repositório:
-```bash
-git clone <url-do-repositorio>
-cd conecte-os-globais
-```
-
-2. Execute com Docker Compose:
-```bash
-docker-compose up --build
-```
-
-3. Acesse a aplicação:
-- Frontend: `http://localhost:5173`
-- Backend API: `http://localhost:8000`
-- Documentação da API: `http://localhost:8000/docs`
+- **TMDB_API_TOKEN** (para as imagens)
 
 ### Desenvolvimento Local
 
 #### Backend
 
-1. Navegue para o diretório do backend:
 ```bash
 cd backend
-```
-
-2. Crie um ambiente virtual:
-```bash
 python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
-```
-
-3. Instale as dependências:
-```bash
+source venv/bin/activate          # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-```
-
-4. Configure as variáveis de ambiente:
-```bash
-cp .env.example .env
-# Edite o arquivo .env com suas configurações
-```
-
-5. Execute o servidor:
-```bash
-uvicorn app.main:app --reload
+cp .env.example .env              # edite com seu TMDB_API_TOKEN
+uvicorn app.main:app --reload     # http://localhost:8000
 ```
 
 #### Frontend
 
-1. Navegue para o diretório do frontend:
 ```bash
 cd frontend
-```
-
-2. Instale as dependências:
-```bash
 npm install
+npm run build:graph               # gera src/data/graph.json a partir dos CSVs (se mudaram)
+# crie um .env com: VITE_API_ENDPOINT=http://localhost:8000
+npm run dev                       # http://localhost:5173
 ```
 
-3. Configure as variáveis de ambiente:
-```bash
-# Crie um arquivo .env com:
-VITE_API_ENDPOINT=http://localhost:8000
-```
+> O frontend precisa do backend no ar **apenas** para as imagens (TMDB). Toda a
+> lógica de grafo (sorteio, conexões, caminho) funciona offline.
 
-4. Execute o servidor de desenvolvimento:
+#### Com Docker
+
 ```bash
-npm run dev
+docker-compose up --build         # backend em http://localhost:8000
 ```
 
 ## 🎮 Como Jogar
 
-1. **Iniciar Jogo**: Clique no botão "Novo jogo" para gerar dois atores aleatórios
-2. **Adicionar Conexões**: Clique nos nós "+" para adicionar novelas ou atores que conectem o caminho
-3. **Completar Caminho**: Continue adicionando nós até conectar os dois atores iniciais
-4. **Verificar Resultado**: O sistema automaticamente verifica se o caminho é válido
-5. **Vitória**: Um modal aparecerá quando a conexão for encontrada com sucesso
+1. **Iniciar Jogo**: Clique em "Novo jogo" para sortear dois atores aleatórios.
+2. **Adicionar Conexões**: Clique num nó para ver suas novelas/atores e adicione os que conectam o caminho.
+3. **Completar Caminho**: Continue adicionando nós até conectar os dois atores iniciais.
+4. **Verificar Resultado**: O caminho é verificado automaticamente a cada nó adicionado (no navegador).
+5. **Vitória**: Um modal aparece quando a conexão é encontrada, com o grau de separação e opção de compartilhar.
 
 ## 📡 API Endpoints
 
-### Atores
-- `GET /api/v1/atores/random` - Retorna um ator aleatório
-- `GET /api/v1/atores/{name}/novelas` - Lista novelas de um ator
+Backend **só-TMDB** (imagens):
 
-### Novelas  
-- `GET /api/v1/novelas/{name}/atores` - Lista atores de uma novela
+- `GET /api/v1/atores/{name}` — imagem (perfil) de um ator
+- `GET /api/v1/novelas/{name}` — imagem (poster) de uma novela
+- `GET /api/v1/health` — status da API
 
-### Jogo
-- `POST /api/v1/graph/shortest_path` - Verifica se o caminho é válido
+## 🗄️ Dados do Grafo
 
-### Sistema
-- `GET /api/v1/health` - Status da API
+Não há banco de dados em runtime. O grafo (atores, novelas e relações) é um
+**dataset estático** gerado a partir dos 3 CSVs em `neo4j/`
+(`atores_nodes.csv`, `novelas_nodes.csv`, `relationships.csv`) e embarcado no
+frontend como `frontend/src/data/graph.json`
+(**7.700 atores · 303 novelas · 20.658 relações**).
 
-## 🗄️ Banco de Dados
+No boot, o app carrega esse JSON numa instância **headless** do Cytoscape, que
+atua como o índice de grafo consultável (`aStar`, `bfs`, `dijkstra`). O board
+visível recebe apenas os nós que o jogador adiciona.
 
-O projeto utiliza **Neo4j** como banco de dados de grafos para armazenar:
-
-- **Nós Ator**: Representam atores/atrizes
-- **Nós Novela**: Representam novelas
-- **Relacionamentos**: Conexões PARTICIPOU_DE entre atores e novelas
-
-### Estrutura do Grafo
+```bash
+cd frontend
+npm run build:graph   # python3 scripts/build-graph.py -> src/data/graph.json
 ```
-(Ator)-[:PARTICIPOU_DE]->(Novela)<-[:PARTICIPOU_DE]-(Ator)
-```
+
+> A pasta `neo4j/` mantém só os **CSVs de origem** do dataset — não há mais um
+> banco Neo4j em uso.
 
 ## 🔧 Configuração
 
@@ -182,22 +179,19 @@ O projeto utiliza **Neo4j** como banco de dados de grafos para armazenar:
 
 #### Backend (.env)
 ```env
-NEO4J_URI="neo4j://localhost:56789"
-NEO4J_AUTH_USER="user"
-NEO4J_AUTH_PASSWORD="password"
 TMDB_API_TOKEN="token"
 FRONTEND_URL="http://localhost:5173"
+CORS_ORIGINS="https://conecteosglobais.igormarcelo.dev.br"
 ```
 
-#### Frontend (.env.local)
+#### Frontend (.env)
 ```env
-VITE_APP_URL=http://localhost:8000
+VITE_API_ENDPOINT=http://localhost:8000
 ```
 
 ## 📝 Licença
 
 Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para detalhes.
-
 
 ## 🎯 Funcionalidades Futuras
 
@@ -210,15 +204,4 @@ Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para de
 
 ---
 
-**🎭 Conecte os Globais** - Descubra as conexões do mundo artístico!
-
-## Abrir conexão local com o Neo4j
-
-*OBS:* Verificar se as credencials AWS estão corretas e respondendo antes de executar o comando
-
-```
-aws ssm start-session \
-    --target i-xxxxxxxxxxx \
-    --document-name AWS-StartPortForwardingSession \
-    --parameters '{"portNumber":["7687"], "localPortNumber":["56789"]}'
-```
+**🎭 Conecte os Globais** — Descubra as conexões do mundo artístico!

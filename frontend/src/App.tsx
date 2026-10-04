@@ -1,140 +1,73 @@
-import { useCallback, useState } from 'react';
-import {
-  ReactFlow,
-  useNodesState,
-  useEdgesState,
-  applyNodeChanges,
-  applyEdgeChanges,
-  Controls,
-  Panel,
-  ReactFlowProvider,
-  type Node,
-  type Edge,
-  type OnEdgesChange,
-} from '@xyflow/react';
-import '@xyflow/react/dist/style.css';
+import { useCallback, useRef, useState } from 'react';
 import "@radix-ui/themes/styles.css";
 import { Box, Button, Container, Flex } from '@radix-ui/themes';
-import GraphNode from './components/GraphNode';
+import GameBoard, { type GameBoardHandle } from './components/GameBoard';
 import ModalEndGame from './components/ModalEndGame';
 import ModalHowToPlay from './components/ModalHowToPlay';
 import FuzzyText from './components/FuzzyText';
 import TvStaticBackground from './components/TvStaticBackground';
-import { PlaceholderNode } from './components/NewNode';
 import { env } from "@/config/env";
+import { getRandomAtor, type ShortestPathResult } from "@/lib/graph";
 import axios from "axios";
 import './index.css'
 
-const initialNodes: Node[] = [
-  {
-    id: "0",
-    data: { direction: 'left' },
-    position: { x: -150, y: 0 },
-    type: "newNode",
-  },
-  {
-    id: "1",
-    data: { direction: 'right' },
-    position: { x: 150, y: 0 },
-    type: "newNode",
-  },
-];
-
-const initialEdges: Edge[] = [];
-
-const nodeTypes = {
-  graphNode: GraphNode,
-  newNode: PlaceholderNode,
-};
-
+/**
+ * App — loop de jogo PRESERVADO. Mudanças vs. versão ReactFlow:
+ *  - O tabuleiro agora é <GameBoard> (Cytoscape) em vez de <ReactFlow>.
+ *  - "Novo jogo" sorteia 2 atores LOCALMENTE (getRandomAtor), e só busca a IMAGEM
+ *    de cada um no backend TMDB (preservado) — antes o /atores/random fazia as duas
+ *    coisas no backend (Neo4j + TMDB).
+ *  - A verificação de caminho acontece dentro do GameBoard (findFilterShortestPath
+ *    local) e sobe pelo callback onWin.
+ */
 function App() {
-  const [nodes, setNodes] = useNodesState(initialNodes);
-  const [edges, setEdges] = useEdgesState(initialEdges);
+  const boardRef = useRef<GameBoardHandle>(null);
   const [openDialog, setOpenDialog] = useState(false);
-  const [graph, setGraph] = useState({});
+  const [result, setResult] = useState<ShortestPathResult | null>(null);
   const [isLoadingNewGame, setIsLoadingNewGame] = useState(false);
 
-  const newGame = useCallback(async () => {
-    setIsLoadingNewGame(true);
+  /** busca só a imagem do ator no backend TMDB (preservado) */
+  const fetchAtorImg = useCallback(async (name: string): Promise<string> => {
     try {
-      const response_1 = await axios.get(`${env.VITE_API_ENDPOINT}/api/v1/atores/random`);
-      const response_2 = await axios.get(`${env.VITE_API_ENDPOINT}/api/v1/atores/random`);
-      const ator_left = response_1.data;
-      const ator_right = response_2.data;
-
-      setNodes([
-        {
-          id: ator_left.name,
-          data: { label: ator_left.name, type: 'ator', direction: 'left', img: ator_left.img, },
-          position: { x: -150, y: -100 },
-          type: "graphNode",
-        },
-        {
-          id: ator_right.name,
-          data: { label: ator_right.name, type: 'ator', direction: 'right', img: ator_right.img, },
-          position: { x: 150, y: -100 },
-          type: "graphNode",
-        }
-      ]);
+      const res = await axios.get(`${env.VITE_API_ENDPOINT}/api/v1/atores/${name}`);
+      return res.data.img ?? "";
     } catch (error) {
       if (axios.isAxiosError(error)) {
         console.error("API error:", error.response?.data || error.message);
       } else {
         console.error("Unexpected error:", error);
       }
+      return "";
+    }
+  }, []);
+
+  const newGame = useCallback(async () => {
+    setIsLoadingNewGame(true);
+    try {
+      // sorteio local dos 2 atores (substitui 2x GET /atores/random do Neo4j)
+      let left = getRandomAtor();
+      let right = getRandomAtor();
+      while (right === left) right = getRandomAtor();
+
+      const [leftImg, rightImg] = await Promise.all([
+        fetchAtorImg(left),
+        fetchAtorImg(right),
+      ]);
+
+      boardRef.current?.reset(
+        { name: left, type: "ator", img: leftImg, direction: "left" },
+        { name: right, type: "ator", img: rightImg, direction: "right" },
+      );
+      setResult(null);
     } finally {
       setIsLoadingNewGame(false);
     }
-  }, [setNodes]);
+  }, [fetchAtorImg]);
 
-  const onNodesChange = useCallback(
-    (changes: any) => {
-      setNodes((nds) => {
-        if (nds.length > 2 && changes[0].type === 'dimensions') {
-          console.warn("Enough nodes to execute shortest path");
-          const fetchData = async () => {
-            try {
-              const filterNodes = nds.filter((node: Node) => node.type === 'graphNode');
-              const graphNodes = filterNodes.map((node: Node) => ({
-                type: node.data.type,
-                name: node.data.label,
-              }));
-              if (graphNodes.length < 3) {
-                console.info("Not enough nodes to verify nodes path");
-                return;
-              }
-              let url = `${env.VITE_API_ENDPOINT}/api/v1/graph/shortest_path`;
-              const res = await axios.post(url, {
-                initial_nodes: graphNodes.slice(0, 2),
-                nodes: graphNodes,
-              });
-              return res.data
-
-            } catch (error) {
-              console.error(error);
-            }
-          };
-
-          fetchData().then((graph) => {
-            setGraph(graph)
-            setOpenDialog(graph.found);
-          }).catch((reason) => {
-            console.error('[App] [onNodesChange]', reason)
-          });
-
-        }
-        return applyNodeChanges(changes, nds)
-      }
-
-      );
-    },
-    [setNodes]
-  );
-
-  const onEdgesChange: OnEdgesChange = useCallback(
-    (changes) => setEdges((eds) => applyEdgeChanges(changes, eds)),
-    [setEdges],
-  );
+  const handleWin = useCallback((r: ShortestPathResult) => {
+    setResult(r);
+    setOpenDialog(r.found);
+  }, []);
 
   return (
     <Container size="4">
@@ -152,36 +85,20 @@ function App() {
           width="100%"
           height="90vh"
         >
-          <ReactFlowProvider>
-            <div className="tv-screen-wrapper">
-              <TvStaticBackground />
-              <div className="tv-scanlines" />
-              <ReactFlow colorMode="dark"
-                nodes={nodes}
-                edges={edges}
-                onNodesChange={onNodesChange}
-                onEdgesChange={onEdgesChange}
-                fitView
-                nodeTypes={nodeTypes}
-                defaultEdgeOptions={{
-                  style: { stroke: '#facc15', strokeWidth: 3 },
-                  animated: true,
-                }}
-                debug={false}
-              >
-                <Controls />
-                <Panel position="top-left">
-                  <ModalHowToPlay />
-                </Panel>
-                <Panel position="top-center">
-                  <Button onClick={newGame} loading={isLoadingNewGame} variant='classic' color='amber'>
-                    {isLoadingNewGame ? 'Carregando...' : 'Novo jogo'}
-                  </Button>
-                </Panel>
-              </ReactFlow>
+          <div className="tv-screen-wrapper">
+            <TvStaticBackground />
+            <div className="tv-scanlines" />
+            <GameBoard ref={boardRef} onWin={handleWin} />
+            <div style={{ position: 'absolute', top: 12, left: 12, zIndex: 4 }}>
+              <ModalHowToPlay />
             </div>
-            <ModalEndGame open={openDialog} onOpenChange={setOpenDialog} graph={graph} />
-          </ReactFlowProvider>
+            <div style={{ position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)', zIndex: 4 }}>
+              <Button onClick={newGame} loading={isLoadingNewGame} variant='classic' color='amber'>
+                {isLoadingNewGame ? 'Carregando...' : 'Novo jogo'}
+              </Button>
+            </div>
+          </div>
+          <ModalEndGame open={openDialog} onOpenChange={setOpenDialog} result={result} />
         </Box>
       </Flex>
     </Container>

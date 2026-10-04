@@ -4,9 +4,6 @@ from app.models import (
     HealthResponse,
     Ator,
     Novela,
-    GraphNode,
-    PathRequest,
-    PathResponse,
 )
 
 
@@ -41,49 +38,3 @@ class TestNovela:
     def test_create_without_img(self):
         n = Novela(id="1", name="Test")
         assert n.img == ""
-
-
-class TestGraphNode:
-    def test_create(self):
-        g = GraphNode(type="ator", name="Test")
-        assert g.type == "ator"
-        assert g.name == "Test"
-
-    def test_missing_fields(self):
-        with pytest.raises(Exception):
-            GraphNode()
-
-
-class TestPathRequest:
-    def test_create(self):
-        req = PathRequest(
-            initial_nodes=[
-                GraphNode(type="ator", name="A"),
-                GraphNode(type="ator", name="B"),
-            ],
-            nodes=[
-                GraphNode(type="ator", name="A"),
-                GraphNode(type="novela", name="N"),
-                GraphNode(type="ator", name="B"),
-            ],
-        )
-        assert len(req.initial_nodes) == 2
-        assert len(req.nodes) == 3
-
-
-class TestPathResponse:
-    def test_defaults(self):
-        r = PathResponse()
-        assert r.nodes is None
-        assert r.grau == 0
-        assert r.found is False
-
-    def test_found_response(self):
-        r = PathResponse(
-            nodes=[GraphNode(type="ator", name="A")],
-            grau=2,
-            found=True,
-        )
-        assert r.found is True
-        assert r.grau == 2
-        assert len(r.nodes) == 1
