@@ -1,5 +1,5 @@
 import { Flex, Text, Button, Dialog, Heading } from '@radix-ui/themes';
-import { memo, useState, useCallback, useEffect } from 'react';
+import { memo, useState, useCallback } from 'react';
 import { shareResult, type GameNode } from '../lib/share';
 import type { ShortestPathResult } from '@/lib/graph';
 
@@ -17,17 +17,8 @@ interface ModalProps {
  *  - o compartilhamento (share.ts) é preservado integralmente.
  */
 function ModalEndGame({ open = false, onOpenChange, result }: ModalProps) {
-    const [path, setPath] = useState('');
     const [isSharing, setIsSharing] = useState(false);
     const [copyFeedback, setCopyFeedback] = useState(false);
-
-    useEffect(() => {
-        if (!result?.nodes?.length) {
-            setPath('');
-            return;
-        }
-        setPath(result.nodes.map((n) => n.name).join('\n➔\n'));
-    }, [result]);
 
     const handleShare = useCallback(async () => {
         if (!result?.nodes) return;
@@ -46,7 +37,7 @@ function ModalEndGame({ open = false, onOpenChange, result }: ModalProps) {
 
     return (
         <Dialog.Root open={open} onOpenChange={onOpenChange}>
-            <Dialog.Content maxWidth="450px">
+            <Dialog.Content maxWidth="640px">
                 <Dialog.Title>Fim de jogo</Dialog.Title>
                 <Flex direction="column" gap="3">
                     <Heading size="6" align="center">
@@ -55,9 +46,40 @@ function ModalEndGame({ open = false, onOpenChange, result }: ModalProps) {
                     <Text size="4" align="center">
                         Você conseguiu conectar os artistas Globais através de suas conexões!
                     </Text>
-                    <Text size="4" align="center" style={{ whiteSpace: 'pre-line' }}>
-                        {path}
-                    </Text>
+                    <Flex
+                        wrap="wrap"
+                        align="center"
+                        justify="center"
+                        gap="2"
+                        style={{ rowGap: 8 }}
+                    >
+                        {(result?.nodes ?? []).map((n, i) => (
+                            <Flex key={`${n.name}-${i}`} align="center" gap="2">
+                                <span
+                                    style={{
+                                        display: 'inline-block',
+                                        padding: '4px 10px',
+                                        borderRadius: 9999,
+                                        fontSize: 13,
+                                        fontWeight: 600,
+                                        whiteSpace: 'nowrap',
+                                        color: '#fff',
+                                        backgroundColor: n.type === 'ator' ? '#3b82f6' : '#f97316',
+                                    }}
+                                >
+                                    {n.name}
+                                </span>
+                                {i < (result?.nodes?.length ?? 0) - 1 && (
+                                    <span style={{ opacity: 0.7, fontSize: 14 }}>➔</span>
+                                )}
+                            </Flex>
+                        ))}
+                    </Flex>
+                    {typeof result?.grau === 'number' && (
+                        <Text size="2" align="center" color="gray">
+                            Grau de separação: {result.grau}
+                        </Text>
+                    )}
                 </Flex>
 
                 <Flex gap="3" mt="4" justify="end">
