@@ -78,6 +78,56 @@ function nodeData(d: {
   return data;
 }
 
+/**
+ * Destaca visualmente o caminho vencedor no fim do jogo: os nós do caminho
+ * (em ordem) e as arestas que ligam nós consecutivos recebem a classe
+ * `on-path` (verde, borda grossa, nome visível). Todo o resto recebe
+ * `dimmed` (esmaecido), para o jogador ver claramente a ligação entre os
+ * dois atores iniciais.
+ */
+function highlightWinningPath(cy: Core, result: ShortestPathResult): void {
+  const pathIds = result.nodes.map((n) => n.name);
+  const pathIdSet = new Set(pathIds);
+
+  // 1) esmaece tudo primeiro
+  cy.elements().addClass("dimmed");
+
+  // 2) realça os nós do caminho (tira o dim e marca on-path)
+  pathIds.forEach((id) => {
+    const node = cy.getElementById(id);
+    if (!node.empty()) node.removeClass("dimmed").addClass("on-path");
+  });
+
+  // 3) realça as arestas entre nós consecutivos do caminho (nos dois sentidos)
+  for (let i = 0; i < pathIds.length - 1; i++) {
+    const a = pathIds[i];
+    const b = pathIds[i + 1];
+    const edges = cy.edges().filter((e) => {
+      const s = e.source().id();
+      const t = e.target().id();
+      return (
+        (s === a && t === b) ||
+        (s === b && t === a) ||
+        // guarda extra: ambos os extremos estão no caminho e adjacentes
+        (pathIdSet.has(s) && pathIdSet.has(t) && Math.abs(pathIds.indexOf(s) - pathIds.indexOf(t)) === 1)
+      );
+    });
+    edges.removeClass("dimmed").addClass("on-path");
+  }
+
+  // 4) enquadra o caminho em destaque
+  const pathCollection = cy.collection();
+  pathIds.forEach((id) => pathCollection.merge(cy.getElementById(id)));
+
+  // força o Cytoscape a repintar as classes recém-aplicadas ANTES do fit,
+  // senão o reflow do fit pode engolir a primeira pintura do destaque.
+  cy.style().update();
+
+  if (pathCollection.length > 0) {
+    cy.animate({ fit: { eles: pathCollection, padding: 80 }, duration: 500 });
+  }
+}
+
 const GameBoard = forwardRef<GameBoardHandle, GameBoardProps>(({ onWin }, ref) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const cyRef = useRef<Core | null>(null);
@@ -150,10 +200,50 @@ const GameBoard = forwardRef<GameBoardHandle, GameBoardProps>(({ onWin }, ref) =
             "line-dash-pattern": [8, 4],
           },
         },
+        {
+          // nós do caminho vencedor: borda verde grossa + glow, nome sempre visível
+          selector: "node.on-path",
+          style: {
+            "border-width": 6,
+            "border-color": "#22c55e",
+            "text-background-color": "#16a34a",
+            "text-background-opacity": 1,
+            "z-index": 20,
+          },
+        },
+        {
+          // arestas do caminho vencedor: verde, sólida e grossa
+          selector: "edge.on-path",
+          style: {
+            "line-color": "#22c55e",
+            width: 6,
+            "line-style": "solid",
+            "z-index": 20,
+          },
+        },
+        {
+          // tudo que NÃO faz parte do caminho fica LEVEMENTE esmaecido no fim
+          // do jogo — o suficiente para o caminho verde saltar, mas mantendo
+          // a imagem dos nós fora do caminho perfeitamente visível.
+          selector: ".dimmed",
+          style: {
+            opacity: 0.7,
+          },
+        },
       ],
       layout: { name: "preset" },
+      // --- comportamento estilo "Connect the Stars" ---
+      // arrastar o fundo = pan do board inteiro
+      userPanningEnabled: true,
+      boxSelectionEnabled: false,
+      // zoom in/out com scroll/trackpad
+      userZoomingEnabled: true,
+      wheelSensitivity: 0.2,
       minZoom: 0.3,
       maxZoom: 2.5,
+      // nós individuais arrastáveis (star/film around)
+      autoungrabify: false,
+      autolock: false,
     });
     cyRef.current = cy;
 
@@ -185,6 +275,17 @@ const GameBoard = forwardRef<GameBoardHandle, GameBoardProps>(({ onWin }, ref) =
       setPopoverOpen(true);
     });
 
+    // --- comportamento "Connect the Stars": arrastar != clicar ---
+    // ao começar a arrastar um nó, ou ao dar pan/zoom no board, fecha o
+    // popover de conexões (que fica ancorado numa posição renderizada e
+    // ficaria desalinhado durante o movimento).
+    cy.on("grab", "node", () => {
+      setPopoverOpen(false);
+    });
+    cy.on("pan zoom", () => {
+      setPopoverOpen(false);
+    });
+
     return () => {
       cy.destroy();
       cyRef.current = null;
@@ -212,7 +313,12 @@ const GameBoard = forwardRef<GameBoardHandle, GameBoardProps>(({ onWin }, ref) =
       played,
     );
     lastPathRef.current = result;
-    if (result.found) onWin(result);
+    if (result.found) {
+      highlightWinningPath(cy, result);
+      // mostra o caminho destacado no board por ~1s ANTES de abrir o modal
+      // (que cobre o tabuleiro), para o jogador enxergar a ligação encontrada.
+      window.setTimeout(() => onWin(result), 1100);
+    }
   }, [onWin]);
 
   // ---- adicionar um nó ao tabuleiro ----
@@ -265,7 +371,9 @@ const GameBoard = forwardRef<GameBoardHandle, GameBoardProps>(({ onWin }, ref) =
       cy.fit(undefined, 60);
       setPopoverOpen(false);
       setFilterValue("");
-      verifyPath();
+      // roda a verificação APÓS o layout/fit assentarem e pintarem, senão o
+      // destaque do caminho (classes on-path/dimmed) é sobrescrito pelo fit.
+      requestAnimationFrame(() => verifyPath());
     },
     [verifyPath],
   );
